@@ -13,7 +13,6 @@ import Container from "@mui/material/Container";
 import { useRouter } from "next/router";
 import useCaixaDialogo from "@/components/CaixaDialogo/useCaixaDialogo";
 import Image from "next/image";
-import { signIn } from "next-auth/react";
 
 const cards = [
   {
@@ -105,9 +104,6 @@ export default function Home() {
               </Button>
               <Button variant="outlined" href="#exemplos">
                 Veja exemplos
-              </Button>
-              <Button variant="contained" onClick={() => signIn("google")}>
-                Login com Google
               </Button>
             </Stack>
             <Typography
