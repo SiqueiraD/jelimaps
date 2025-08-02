@@ -1,6 +1,7 @@
 import React from "react";
 import { Html, Head, Main, NextScript } from "next/document";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import Script from "next/script";
 
 export default function Document() {
@@ -21,6 +22,7 @@ export default function Document() {
         <Main />
         <Analytics />
         <NextScript />
+        <SpeedInsights />
       </body>
     </Html>
   );
