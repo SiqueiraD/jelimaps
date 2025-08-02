@@ -36,16 +36,12 @@ const ResponsiveAppBar: React.FC = () => {
     setAnchorElNav(event.currentTarget);
   };
 
-  const handleCloseNavMenu = () => {
+  const handleCloseUserMenu = () => {
     setAnchorElNav(null);
   };
 
   const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
-  };
-
-  const handleCloseUserMenu = () => {
-    setAnchorElUser(null);
   };
 
   const handleSignOut = async () => {
@@ -68,7 +64,7 @@ const ResponsiveAppBar: React.FC = () => {
           confirmarTitle: "Começar um novo",
         })
       : router.push(path);
-    handleCloseNavMenu();
+    handleCloseUserMenu();
   };
 
   return (
@@ -143,7 +139,7 @@ const ResponsiveAppBar: React.FC = () => {
                       open={Boolean(anchorElUser)}
                       onClose={handleCloseUserMenu}
                     >
-                      <MenuItem onClick={handleCloseUserMenu}>
+                      <MenuItem onClick={() => handleRouter("/perfil")}>
                         <Typography textAlign="center">Perfil</Typography>
                       </MenuItem>
                       <MenuItem onClick={handleSignOut}>
@@ -189,7 +185,7 @@ const ResponsiveAppBar: React.FC = () => {
                 horizontal: "left",
               }}
               open={Boolean(anchorElNav)}
-              onClose={handleCloseNavMenu}
+              onClose={handleCloseUserMenu}
               sx={{
                 display: { xs: "block", md: "none" },
               }}
