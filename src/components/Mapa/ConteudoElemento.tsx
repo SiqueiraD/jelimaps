@@ -46,10 +46,27 @@ const ConteudoElemento = (propsConteudoElemento: {
       !(propsConteudoElemento.draw as any)._mode.selected.includes(
         propsConteudoElemento.elemento.id
       )
-    )
-      propsConteudoElemento.draw.selectFeature(
-        propsConteudoElemento.elemento.id
-      );
+    ) {
+      if (
+        (propsConteudoElemento.draw as any).hasFeature([
+          propsConteudoElemento.elemento.id.toString(),
+        ])
+      )
+        propsConteudoElemento.draw.selectFeature(
+          propsConteudoElemento.elemento.id
+        );
+      else {
+        (propsConteudoElemento.draw as any).addFeatures([
+          {
+            ...propsConteudoElemento.elemento,
+            properties: {
+              ...propsConteudoElemento.elemento.properties,
+              selected: true,
+            },
+          },
+        ]);
+      }
+    }
   }
 
   useEffect(() => {

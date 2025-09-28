@@ -29,6 +29,7 @@ import { elementos } from "@/main/constants/elementos";
 import ConteudoMapa from "../Mapa/ConteudoMapa";
 import useWindowDimensions from "./useWindowDimensions";
 import SliderLinhaTempo from "../Mapa/SliderLinhaTempo";
+import SearchLocationControl from "../SearchBox/SearchLocationControl";
 import Image from "next/image";
 
 export default function Mapa(propsMapa: {
@@ -235,6 +236,52 @@ export default function Mapa(propsMapa: {
           >
             <Elementos altura={props.altura} />
           </CustomControlLeaflet> */}
+          {mapaContext.modoVisao === MODO_VISAO.openstreetmap && (
+            <SearchLocationControl
+              position="topleft"
+              onLocationFound={(location) => {
+                // Verifica se é MultiPolygon para adicionar cada polígono separadamente
+                if (
+                  location.geojson &&
+                  location.geojson.type === "MultiPolygon"
+                ) {
+                  // Itera sobre cada polígono do MultiPolygon
+                  const multiPolygonCoords = location.geojson
+                    .coordinates as any;
+                  multiPolygonCoords.forEach(
+                    (polygonCoords: any, index: number) => {
+                      dispatch({
+                        type: "addElemento",
+                        posicao: polygonCoords as any,
+                        tipo: "Polygon",
+                        valor: {
+                          ...location,
+                          properties: {
+                            mode: "polygon",
+                            name: `${
+                              location.display_name.split(",")[0]
+                            } - Parte ${index + 1}`,
+                          },
+                        },
+                      });
+                    }
+                  );
+                } else if (location.geojson) {
+                  // Para outros tipos (Polygon, Point, LineString), adiciona normalmente
+                  dispatch({
+                    type: "addElemento",
+                    posicao: location.geojson.coordinates as any,
+                    tipo: location.geojson.type,
+                    valor: {
+                      ...location,
+                      properties: { mode: location.geojson.type.toLowerCase() },
+                    },
+                  });
+                }
+                console.log("Localização encontrada:", location);
+              }}
+            />
+          )}
           <CustomControlLeaflet
             classCustom={"leaflet-control custom-control-undo"}
           >
