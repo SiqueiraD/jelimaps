@@ -127,7 +127,7 @@ export default function Home() {
                   simples.
                   <Image
                     src={"/assets/criacao-intuitiva-mapa.gif"}
-                    layout={"responsive"}
+                    layout="responsive"
                     height={175}
                     width={175}
                     alt={`Gravação acelerada da tela da criação intuitiva de mapas!`}
@@ -141,7 +141,7 @@ export default function Home() {
                   específicos e a criação de narrativas visuais impactantes.
                   <Image
                     src={"/assets/integracao-imagens-proprias.gif"}
-                    layout={"responsive"}
+                    layout="responsive"
                     height={175}
                     width={175}
                     alt={`Gravação acelerada da integração de imagens proprias!`}
@@ -158,7 +158,7 @@ export default function Home() {
                   mundo.
                   <Image
                     src={"/assets/openstreetmaps-tiles.gif"}
-                    layout={"responsive"}
+                    layout="responsive"
                     height={175}
                     width={175}
                     alt={`Gravação acelerada alterando o plano de fundo de mapas comuns!`}
@@ -173,7 +173,7 @@ export default function Home() {
                   longo do tempo, analisar mudanças e descobrir padrões.
                   <Image
                     src={"/assets/linha-tempo-interativa.gif"}
-                    layout={"responsive"}
+                    layout="responsive"
                     height={175}
                     width={175}
                     alt={`Gravação acelerada da linha do tempo interativa!`}

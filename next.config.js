@@ -1,10 +1,60 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Habilitar o modo estrito para melhor detecção de problemas
+  reactStrictMode: true,
+  
+  // Configurações de imagens
   images: {
+    // Permitir imagens de qualquer origem (para avatares de usuário, etc.)
+    domains: ['*', 'lh3.googleusercontent.com'],
     remotePatterns: [
-      { protocol: "https", hostname: "*" },
-      { protocol: "http", hostname: "*" },
+      { protocol: 'https', hostname: '*' },
+      { protocol: 'http', hostname: '*' },
     ],
+  },
+  
+  // Configurações de segurança de cabeçalhos
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+        ],
+      },
+    ];
+  },
+  
+  // Configurações de redirecionamento para autenticação
+  async redirects() {
+    return [
+      {
+        source: '/auth/signin',
+        destination: '/api/auth/signin',
+        permanent: true,
+      },
+      {
+        source: '/auth/signout',
+        destination: '/api/auth/signout',
+        permanent: true,
+      },
+      {
+        source: '/auth/error',
+        destination: '/api/auth/error',
+        permanent: true,
+      },
+    ];
   },
   webpack(config) {
     // Grab the existing rule that handles SVG imports
