@@ -6,6 +6,7 @@ import { GeoJSONStoreFeatures, TerraDraw } from "terra-draw";
 import { useMapaContext, useMapaDispatch } from "./MapaContext";
 import MapaContextChanger from "./ContextChangers";
 import { elementos } from "@/main/constants/elementos";
+import { montarDispatchSelecionarElemento } from "./MapaUtils/selecionarElementoHelper";
 
 const ConteudoElemento = (propsConteudoElemento: {
   elemento: elementoPadrao;
@@ -75,16 +76,12 @@ const ConteudoElemento = (propsConteudoElemento: {
     function insereElementoSemDraw() {
       if (propsConteudoElemento.draw)
         elementoGeoJSON.on("click", () => {
-          dispatch({
-            type: "selecionarElementoFoco",
-            id: propsConteudoElemento.elemento.id,
-            mapContext: {
-              ...mapaContext,
-              bounds: elementoGeoJSON.getBounds(),
-              center: elementoGeoJSON.getBounds().getCenter(),
-              zoom: propsConteudoElemento.elemento.zoom,
-            },
-          });
+          // Adiciona bounds ao elemento para facilitar o cálculo no helper
+          const elementoComBounds = {
+            ...propsConteudoElemento.elemento,
+            bounds: elementoGeoJSON.getBounds()
+          };
+          dispatch(montarDispatchSelecionarElemento(elementoComBounds, mapaContext));
         });
       elementoGeoJSON.setStyle({
         color: corItemSelecionadoFoco(propsConteudoElemento.elemento),

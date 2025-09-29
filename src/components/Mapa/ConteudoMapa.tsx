@@ -1,8 +1,7 @@
 import { Marker, Rectangle, Popup } from "react-leaflet";
-import Leaflet, {
+import {
   LatLngBounds,
   divIcon,
-  LatLngBoundsExpression,
 } from "leaflet";
 import React from "react";
 import { useMapaContext, useMapaDispatch } from "@/components/Mapa/MapaContext";
@@ -15,6 +14,7 @@ import ImageOverlayRotated from "../Mapa/ImageOverlayRotated";
 import { TerraDraw } from "terra-draw";
 import MapaContextChanger from "../Mapa/ContextChangers";
 import ConteudoElemento from "../Mapa/ConteudoElemento";
+import { montarDispatchSelecionarElemento } from "./MapaUtils/selecionarElementoHelper";
 
 const ConteudoMapa = (propsConteudoMapa: {
   draw?: TerraDraw;
@@ -33,30 +33,7 @@ const ConteudoMapa = (propsConteudoMapa: {
     if (evento.originalEvent.shiftKey || evento.originalEvent.ctrlKey)
       dispatch({ type: "adicionarElementoFoco", elemento: elemento });
     else
-      dispatch({
-        type: "selecionarElementoFoco",
-        elemento: elemento,
-        mapContext:
-          elemento.dataRef === "Marker"
-            ? {
-                ...mapaContext,
-                bounds: elemento.geometry.coordinates as LatLngBoundsExpression,
-                center: new Leaflet.LatLng(
-                  elemento.geometry.coordinates[0] as number,
-                  elemento.geometry.coordinates[1] as number
-                ),
-                zoom: elemento.zoom,
-              }
-            : {
-                ...mapaContext,
-                bounds: elemento.bounds,
-                center: Leaflet.latLngBounds(
-                  elemento.bounds._northEast,
-                  elemento.bounds._southWest
-                ).getCenter(),
-                zoom: elemento.zoom,
-              },
-      });
+      dispatch(montarDispatchSelecionarElemento(elemento, mapaContext));
   };
 
   return (

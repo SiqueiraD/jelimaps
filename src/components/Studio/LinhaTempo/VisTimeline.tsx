@@ -6,8 +6,9 @@ import {
   TimelineOptions,
 } from "vis-timeline";
 import "node_modules/vis-timeline/dist/vis-timeline-graph2d.min.css";
-import Leaflet, { LatLngBoundsExpression } from "leaflet";
+import Leaflet from "leaflet";
 import { useMapaContext, useMapaDispatch } from "@/components/Mapa/MapaContext";
+import { montarDispatchSelecionarElemento } from "@/components/Mapa/MapaUtils/selecionarElementoHelper";
 import {
   elementoPadrao,
   tipoElemento,
@@ -146,42 +147,16 @@ export default function VisTimeline(props: {
               type: "Feature",
             });
 
-            dispatch({
-              type: "selecionarElementoFoco",
-              id: item.items[0],
-              mapContext: {
-                ...mapaContext,
-                bounds: elementoGeoJSON.getBounds(),
-                center: elementoGeoJSON.getBounds().getCenter(),
-                zoom: elementConteudo.zoom,
-              },
-            });
+            // Adiciona bounds ao elemento e usa a função auxiliar
+            const elementoComBounds = {
+              ...elementConteudo,
+              bounds: elementoGeoJSON.getBounds()
+            };
+            
+            dispatch(montarDispatchSelecionarElemento(elementoComBounds, mapaContext));
           } catch (error) {
-            dispatch({
-              type: "selecionarElementoFoco",
-              id: item.items[0],
-              mapContext:
-                elementConteudo.dataRef === "Marker"
-                  ? {
-                      ...mapaContext,
-                      bounds: elementConteudo.geometry
-                        .coordinates as LatLngBoundsExpression,
-                      center: new Leaflet.LatLng(
-                        elementConteudo.geometry.coordinates[0] as number,
-                        elementConteudo.geometry.coordinates[1] as number
-                      ),
-                      zoom: elementConteudo.zoom,
-                    }
-                  : {
-                      ...mapaContext,
-                      bounds: elementConteudo.bounds,
-                      center: Leaflet.latLngBounds(
-                        elementConteudo.bounds._northEast,
-                        elementConteudo.bounds._southWest
-                      ).getCenter(),
-                      zoom: elementConteudo.zoom,
-                    },
-            });
+            // Em caso de erro, usa a função auxiliar sem bounds calculados
+            dispatch(montarDispatchSelecionarElemento(elementConteudo, mapaContext));
           }
         }
       } else {
@@ -247,20 +222,28 @@ export default function VisTimeline(props: {
         const elementConteudo = Object.keys(mapaContext?.conteudo)
           .flatMap((x) => mapaContext?.conteudo[x])
           .find((x) => x.id === item.group);
-        const elementoGeoJSON = new Leaflet.GeoJSON(elementConteudo);
-        dispatch({
-          type: "selecionarElementoFoco",
-          id: item.group,
-          //  elementosAlteracoesTimeline().find(
-          //   (x) => x.id === item.group
-          // ),
-          mapContext: {
-            ...mapaContext,
-            bounds: elementoGeoJSON.getBounds(),
-            center: elementoGeoJSON.getBounds().getCenter(),
-            zoom: elementConteudo.zoom,
-          },
-        });
+        
+        if (elementConteudo) {
+          // Para markers, não podemos usar GeoJSON diretamente
+          if (elementConteudo.dataRef === "Marker") {
+            // Para markers, usa a função auxiliar diretamente (ela já trata markers)
+            dispatch(montarDispatchSelecionarElemento(elementConteudo, mapaContext));
+          } else {
+            try {
+              const elementoGeoJSON = new Leaflet.GeoJSON(elementConteudo);
+              // Adiciona bounds ao elemento e usa a função auxiliar
+              const elementoComBounds = {
+                ...elementConteudo,
+                bounds: elementoGeoJSON.getBounds()
+              };
+              
+              dispatch(montarDispatchSelecionarElemento(elementoComBounds, mapaContext));
+            } catch (error) {
+              // Em caso de erro, usa a função auxiliar sem bounds calculados
+              dispatch(montarDispatchSelecionarElemento(elementConteudo, mapaContext));
+            }
+          }
+        }
       }
     },
     [dispatch, mapaContext, tempoAtualRef]

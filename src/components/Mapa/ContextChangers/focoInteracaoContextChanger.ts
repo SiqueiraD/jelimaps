@@ -41,6 +41,7 @@ const changeElementoFoco = (
     bounds: actionContextChange.mapContext?.bounds ?? oldMapaContext.bounds,
     center: actionContextChange.mapContext?.center ?? oldMapaContext.center,
     zoom: actionContextChange.mapContext?.zoom ?? oldMapaContext.zoom,
+    tempo: actionContextChange.time ?? oldMapaContext.tempo,
   };
 };
 

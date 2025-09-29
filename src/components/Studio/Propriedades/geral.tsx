@@ -25,6 +25,7 @@ import { useRouter } from "next/router";
 import moment from "moment";
 import { MODO_VISAO } from "@/components/Mapa/mapaContextTypes";
 import tiposPlanoFundo from "@/components/Mapa/PlanoFundoMapaComum/tiposPlanoFundo";
+import ListaElementos from "./ListaElementos";
 
 export default function Geral() {
   const mapaContext = useMapaContext();
@@ -236,6 +237,14 @@ export default function Geral() {
                 label={"Separar por elementos"}
               />
             </Container>
+            
+            <Container className="group-frame">
+              <Typography variant="h6" className="title">
+                Lista de Elementos
+              </Typography>
+              <ListaElementos />
+            </Container>
+            
             {/* <FormControlLabel
               control={
                 <Switch

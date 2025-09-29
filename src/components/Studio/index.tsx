@@ -15,6 +15,8 @@ import terraDrawSetup from "./terraDrawSetup";
 import DraggerResize from "../DraggerResize";
 import useBarraAlerta from "../BarraAlerta/useBarraAlerta";
 import Tutoriais from "./Tutoriais";
+import { useSession } from "next-auth/react";
+import DefaultTemplate from "@/main/template/DefaultTemplate";
 // import moment from "moment";
 
 // Define a função para inserir um texto no clipboard
@@ -27,6 +29,8 @@ async function copyToClipboard(text) {
 }
 
 const Studio = () => {
+  const { data: session, status } = useSession();
+  const loading = status === "loading";
   const { height, width } = useWindowDimensions();
   const [rndRef, setRndRef] = useState<Rnd>();
   const [map, setMap] = useState<L.Map>();
@@ -131,11 +135,11 @@ const Studio = () => {
               );
             if (features?.length > 0 && features[0].id)
               setTimeout(() => {
-            try {
-                _draw.selectFeature(features[0].id);
-            } catch (error) {
-                console.log('deueurro',{error});
-            }
+                try {
+                  _draw.selectFeature(features[0].id);
+                } catch (error) {
+                  console.log("deueurro", { error });
+                }
               }, 250);
           }, 100);
       });
@@ -157,6 +161,19 @@ const Studio = () => {
     mapaContext.elementoFoco,
     mapaContext.elementosFoco,
   ]);
+
+  if (loading)
+    return (
+      <DefaultTemplate>
+        <h1>Aguarde...</h1>
+      </DefaultTemplate>
+    );
+  if (!session)
+    return (
+      <DefaultTemplate>
+        <h1>Faça login para continuar</h1>
+      </DefaultTemplate>
+    );
 
   return (
     <Grid2 container sx={{ height: "100%" }} id="studioMapa">
