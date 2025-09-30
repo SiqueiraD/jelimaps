@@ -13,6 +13,7 @@ import Container from "@mui/material/Container";
 import { useRouter } from "next/router";
 import useCaixaDialogo from "@/components/CaixaDialogo/useCaixaDialogo";
 import Image from "next/image";
+import { useMapaStore } from "@/stores/mapaStore";
 
 const cards = [
   {
@@ -39,6 +40,7 @@ const cards = [
 export default function Home() {
   const router = useRouter();
   const { openModalConfirm } = useCaixaDialogo();
+  const hasStoredContext = useMapaStore((state) => state.hasStoredContext());
 
   return (
     <DefaultTemplate>
@@ -84,7 +86,7 @@ export default function Home() {
               <Button
                 variant="contained"
                 onClick={() => {
-                  if (localStorage.getItem("mapaContext"))
+                  if (hasStoredContext)
                     openModalConfirm({
                       title: "Você tem um projeto em andamento",
                       message: "Deseja continuar ou começar do zero?",

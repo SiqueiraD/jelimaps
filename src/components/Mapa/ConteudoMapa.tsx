@@ -1,7 +1,8 @@
-import { Marker, Rectangle, Popup } from "react-leaflet";
+import { Marker, Rectangle, Popup, useMap } from "react-leaflet";
 import {
   LatLngBounds,
   divIcon,
+  GeoJSON,
 } from "leaflet";
 import React from "react";
 import { useMapaContext, useMapaDispatch } from "@/components/Mapa/MapaContext";
@@ -20,6 +21,12 @@ const ConteudoMapa = (propsConteudoMapa: {
   draw?: TerraDraw;
   isApresentacao?: boolean;
 }) => {
+    const map = useMap();
+    map.eachLayer((layer) => {
+      if (layer instanceof GeoJSON) {
+        map.removeLayer(layer);
+      }
+    });
   const mapaContext = useMapaContext();
   const dispatch = useMapaDispatch();
   const { openModalConfirm } = useCaixaDialogo();

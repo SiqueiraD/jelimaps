@@ -11,6 +11,7 @@ import { Public, AccountCircle } from "@mui/icons-material";
 import { useRouter } from "next/router";
 import useCaixaDialogo from "@/components/CaixaDialogo/useCaixaDialogo";
 import { signIn, signOut, useSession } from "next-auth/react";
+import { useMapaStore } from "@/stores/mapaStore";
 
 const pages = [
   { text: "Home", href: "/" },
@@ -30,6 +31,7 @@ const ResponsiveAppBar: React.FC = () => {
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
   const { openModalConfirm } = useCaixaDialogo();
+  const hasStoredContext = useMapaStore((state) => state.hasStoredContext());
   const loading = status === 'loading';
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -50,7 +52,7 @@ const ResponsiveAppBar: React.FC = () => {
   };
 
   const handleRouter = (path: string) => {
-    path == "/mapa" && localStorage.getItem("mapaContext")
+    path == "/mapa" && hasStoredContext
       ? openModalConfirm({
           title: "Você tem um projeto em andamento",
           message: "Deseja continuar ou começar do zero?",

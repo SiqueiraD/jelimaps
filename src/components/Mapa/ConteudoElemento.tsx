@@ -7,7 +7,11 @@ import { useMapaContext, useMapaDispatch } from "./MapaContext";
 import MapaContextChanger from "./ContextChangers";
 import { elementos } from "@/main/constants/elementos";
 import { montarDispatchSelecionarElemento } from "./MapaUtils/selecionarElementoHelper";
-import { contarPontosCoordenadas, isPoligonoGrande, getTooltipPoligonoGrande } from "./MapaUtils/contarPontosHelper";
+import {
+  contarPontosCoordenadas,
+  isPoligonoGrande,
+  getTooltipPoligonoGrande,
+} from "./MapaUtils/contarPontosHelper";
 
 const ConteudoElemento = (propsConteudoElemento: {
   elemento: elementoPadrao;
@@ -45,25 +49,22 @@ const ConteudoElemento = (propsConteudoElemento: {
 
   function selecionarElementoPeloDraw() {
     const elemento = propsConteudoElemento.elemento;
-    
+
     // Verificar se é um polígono grande
     if (isPoligonoGrande(elemento)) {
       const totalPoints = contarPontosCoordenadas(elemento);
       const tooltipContent = getTooltipPoligonoGrande(totalPoints);
-      
+
       const bounds = new Leaflet.GeoJSON(elemento).getBounds();
       const center = bounds.getCenter();
-      
-      Leaflet.popup()
-        .setLatLng(center)
-        .setContent(tooltipContent)
-        .openOn(map);
-      
+
+      Leaflet.popup().setLatLng(center).setContent(tooltipContent).openOn(map);
+
       // Selecionar apenas no contexto, sem adicionar ao draw
       dispatch(montarDispatchSelecionarElemento(elemento, mapaContext));
       return;
     }
-    
+
     // Comportamento padrão para elementos com menos de 2000 pontos
     if (
       !(propsConteudoElemento.draw as any)._mode.selected.includes(
@@ -100,27 +101,29 @@ const ConteudoElemento = (propsConteudoElemento: {
         elementoGeoJSON.on("click", () => {
           // Verificar se é um polígono grande antes de processar o clique
           const elemento = propsConteudoElemento.elemento;
-          
+
           if (isPoligonoGrande(elemento)) {
             const totalPoints = contarPontosCoordenadas(elemento);
             // Criar um popup/tooltip informativo
             const tooltipContent = getTooltipPoligonoGrande(totalPoints);
-            
+
             const bounds = elementoGeoJSON.getBounds();
             const center = bounds.getCenter();
-            
+
             Leaflet.popup()
               .setLatLng(center)
               .setContent(tooltipContent)
               .openOn(map);
           }
-          
+
           // Adiciona bounds ao elemento para facilitar o cálculo no helper
           const elementoComBounds = {
             ...propsConteudoElemento.elemento,
-            bounds: elementoGeoJSON.getBounds()
+            bounds: elementoGeoJSON.getBounds(),
           };
-          dispatch(montarDispatchSelecionarElemento(elementoComBounds, mapaContext));
+          dispatch(
+            montarDispatchSelecionarElemento(elementoComBounds, mapaContext)
+          );
         });
       elementoGeoJSON.setStyle({
         color: corItemSelecionadoFoco(propsConteudoElemento.elemento),

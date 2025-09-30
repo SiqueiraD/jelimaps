@@ -2,9 +2,11 @@
 import "leaflet/dist/leaflet.css";
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/router";
+import { useMapaStore } from "@/stores/mapaStore";
 
 export default function Mapa() {
   const router = useRouter();
+  const { clearStore, dispatch } = useMapaStore();
   const exemplos = useMemo(
     () => ["one-piece", "pequena-africa", "golpe-64", "novo"],
     []
@@ -15,15 +17,14 @@ export default function Mapa() {
       router.query.id &&
       typeof router.query.id === "string" &&
       exemplos.includes(router.query.id)
-    )
-      if (typeof localStorage !== "undefined") {
-        localStorage.clear();
-        if (router.query.id !== "novo") {
-          const su = require(`@/pages/examples/${router.query.id}.json`);
-          localStorage.setItem("mapaContext", JSON.stringify(su));
-        }
-        router.push("/mapa");
+    ) {
+      clearStore(); // Limpa o store do Zustand
+      if (router.query.id !== "novo") {
+        const su = require(`@/pages/examples/${router.query.id}.json`);
+        dispatch({ type: "reset", mapContext: su });
       }
-  }, [exemplos, router]);
+      router.push("/mapa");
+    }
+  }, [exemplos, router, clearStore, dispatch]);
   return null;
 }

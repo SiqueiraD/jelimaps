@@ -34,7 +34,8 @@ const VisuallyHiddenInput = styled("input")({
 });
 
 export default function ModoVisaoDialog() {
-  const { openModalConfirm, closeModalConfirm, onConfirm } = useCaixaDialogo();
+  const { openModalConfirm, closeModalConfirm, onConfirm, open } =
+    useCaixaDialogo();
   const mapaContext = useMapaContext();
   const dispatch = useMapaDispatch();
   const nameRef = React.useRef("");
@@ -106,7 +107,10 @@ export default function ModoVisaoDialog() {
   }, [openModalConfirm, onConfirm, width, height, handleMapaProprioComImagem]);
 
   useEffect(() => {
-    if (!mapaContext.modoVisao)
+    if (!!mapaContext.modoVisao && open) {
+      closeModalConfirm(null, null);
+    }
+    if (!mapaContext.modoVisao) {
       openModalConfirm({
         title: "",
         message: "",
@@ -225,6 +229,7 @@ export default function ModoVisaoDialog() {
           </div>
         ),
       });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapaContext.modoVisao]);
   return null;
