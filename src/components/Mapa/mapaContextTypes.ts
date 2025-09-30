@@ -145,6 +145,7 @@ export type actionContextChange = {
   posicao?: [number, number] | [number, number][] | [number, number][][];
   indiceElemento?: number;
   nomeElemento?: string;
+  textoElemento?: string;
   nomePropriedade?: string;
   valorPropriedade?: any;
   valorBooleano?: boolean;

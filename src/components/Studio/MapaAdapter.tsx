@@ -252,6 +252,8 @@ export default function Mapa(propsMapa: {
                     (polygonCoords: any, index: number) => {
                       dispatch({
                         type: "addElemento",
+                        textoElemento: location.display_name,
+                        nomeElemento: (location as any).name ?? location.display_name,
                         posicao: polygonCoords as any,
                         tipo: "Polygon",
                         valor: {
@@ -272,6 +274,8 @@ export default function Mapa(propsMapa: {
                     type: "addElemento",
                     posicao: location.geojson.coordinates as any,
                     tipo: location.geojson.type,
+                    textoElemento: location.display_name,
+                    nomeElemento: (location as any).name ?? location.display_name,
                     valor: {
                       ...location,
                       properties: { mode: location.geojson.type.toLowerCase() },

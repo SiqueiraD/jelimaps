@@ -166,10 +166,10 @@ const addElementoPadrao = (
       type: actionContext.tipo,
     },
     dataRef: actionContext.tipo,
-    nome: `${actionContext.tipo}#${
+    nome: actionContext.nomeElemento ?? `${actionContext.tipo}#${
       oldMapaContext.conteudo?.Marker?.length + 1 || 1
     }`,
-    texto: "",
+    texto: actionContext.textoElemento ?? "",
     properties: actionContext.valor?.properties,
     id: actionContext.id ?? v4(),
     type: "Feature",

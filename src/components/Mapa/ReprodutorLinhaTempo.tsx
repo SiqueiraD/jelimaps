@@ -115,10 +115,15 @@ const ReprodutorLinhaTempo = (propsReprodutor: {
                 clearInterval(intervalId);
                 setIntervalId(null);
                 dispatch({
-                  type: "alteraPropriedadeGeral",
-                  nomePropriedade: "playStatus",
-                  valorPropriedade: i,
+                  type: "selecionarElementoFoco",
                 });
+                setTimeout(() => {
+                  dispatch({
+                    type: "alteraPropriedadeGeral",
+                    nomePropriedade: "playStatus",
+                    valorPropriedade: i,
+                  });
+                }, 100);
               } else {
                 dispatch({
                   type: "pulaTempo",
