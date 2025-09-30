@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import Propriedades from "./Propriedades";
-import LinhaTempo from "./LinhaTempo/Index";
+import "leaflet/dist/leaflet.css";
+import { isPoligonoGrande } from "@/components/Mapa/MapaUtils/contarPontosHelper";
 import { Grid2 } from "@mui/material";
 import Mapa from "./MapaAdapter";
 import { Rnd } from "react-rnd";
@@ -17,6 +17,8 @@ import useBarraAlerta from "../BarraAlerta/useBarraAlerta";
 import Tutoriais from "./Tutoriais";
 import { useSession } from "next-auth/react";
 import DefaultTemplate from "@/main/template/DefaultTemplate";
+import Propriedades from "./Propriedades";
+import LinhaTempo from "./LinhaTempo/Index";
 // import moment from "moment";
 
 // Define a função para inserir um texto no clipboard
@@ -123,24 +125,40 @@ const Studio = () => {
           setTimeout(() => {
             const features = _draw.getSnapshot();
             _draw.clear();
-            if (
-              features.some((x) =>
-                elementosSelecionadosRef.current.includes(x.id)
-              )
-            )
-              _draw.addFeatures(
-                features.filter((x) =>
-                  elementosSelecionadosRef.current.includes(x.id)
-                )
+            
+            // Filtrar features selecionadas, excluindo polígonos grandes
+            const featuresValidas = features.filter((x) => {
+              if (!elementosSelecionadosRef.current.includes(x.id)) {
+                return false;
+              }
+              // Verificar se é um polígono grande
+              if (isPoligonoGrande(x)) {
+                return false; // Não adicionar ao draw
+              }
+              return true;
+            });
+            
+            if (featuresValidas.length > 0) {
+              _draw.addFeatures(featuresValidas);
+            }
+            
+            // Selecionar a primeira feature válida
+            if (features?.length > 0 && features[0].id) {
+              const primeiraFeatureValida = features.find(f => 
+                !isPoligonoGrande(f) && elementosSelecionadosRef.current.includes(f.id)
               );
-            if (features?.length > 0 && features[0].id)
-              setTimeout(() => {
-                try {
-                  _draw.selectFeature(features[0].id);
-                } catch (error) {
+              
+              if (primeiraFeatureValida) {
+                setTimeout(() => {
+                  try {
+                    if (_draw.hasFeature(primeiraFeatureValida.id))
+                      _draw.selectFeature(primeiraFeatureValida.id);
+                  } catch (error) {
                   console.log("deueurro", { error });
-                }
-              }, 250);
+                  }
+                }, 250);
+              }
+            }
           }, 100);
       });
     }

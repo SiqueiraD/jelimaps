@@ -101,6 +101,7 @@ export type mapaContextSchema = periodoInicioFim &
     apenasApresentacao?: boolean;
     caixaDialogo?: string;
     larguraPropriedades?: number;
+    tipoTempo?: "real" | "numerico"; // Define se o tempo será tratado como data real ou número inteiro
   };
 type telaMapa = {
   center?: LatLng;
