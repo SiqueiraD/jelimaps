@@ -125,7 +125,7 @@ const Studio = () => {
           setTimeout(() => {
             const features = _draw.getSnapshot();
             _draw.clear();
-            
+
             // Filtrar features selecionadas, excluindo polígonos grandes
             const featuresValidas = features.filter((x) => {
               if (!elementosSelecionadosRef.current.includes(x.id)) {
@@ -137,24 +137,26 @@ const Studio = () => {
               }
               return true;
             });
-            
+
             if (featuresValidas.length > 0) {
               _draw.addFeatures(featuresValidas);
             }
-            
+
             // Selecionar a primeira feature válida
             if (features?.length > 0 && features[0].id) {
-              const primeiraFeatureValida = features.find(f => 
-                !isPoligonoGrande(f) && elementosSelecionadosRef.current.includes(f.id)
+              const primeiraFeatureValida = features.find(
+                (f) =>
+                  !isPoligonoGrande(f) &&
+                  elementosSelecionadosRef.current.includes(f.id)
               );
-              
+
               if (primeiraFeatureValida) {
                 setTimeout(() => {
                   try {
                     if (_draw.hasFeature(primeiraFeatureValida.id))
                       _draw.selectFeature(primeiraFeatureValida.id);
                   } catch (error) {
-                  console.log("deueurro", { error });
+                    console.log("deueurro", { error });
                   }
                 }, 250);
               }
@@ -180,18 +182,20 @@ const Studio = () => {
     mapaContext.elementosFoco,
   ]);
 
-  if (loading)
-    return (
-      <DefaultTemplate>
-        <h1>Aguarde...</h1>
-      </DefaultTemplate>
-    );
-  if (!session)
-    return (
-      <DefaultTemplate>
-        <h1>Faça login para continuar</h1>
-      </DefaultTemplate>
-    );
+  if (process.env.FEATUREFLAG_LOGIN == "true") {
+    if (loading)
+      return (
+        <DefaultTemplate>
+          <h1>Aguarde...</h1>
+        </DefaultTemplate>
+      );
+    if (!session)
+      return (
+        <DefaultTemplate>
+          <h1>Faça login para continuar</h1>
+        </DefaultTemplate>
+      );
+  }
 
   return (
     <Grid2 container sx={{ height: "100%" }} id="studioMapa">
