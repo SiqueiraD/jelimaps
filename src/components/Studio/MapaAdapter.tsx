@@ -253,7 +253,8 @@ export default function Mapa(propsMapa: {
                       dispatch({
                         type: "addElemento",
                         textoElemento: location.display_name,
-                        nomeElemento: (location as any).name ?? location.display_name,
+                        nomeElemento:
+                          (location as any).name ?? location.display_name,
                         posicao: polygonCoords as any,
                         tipo: "Polygon",
                         valor: {
@@ -269,13 +270,22 @@ export default function Mapa(propsMapa: {
                     }
                   );
                 } else if (location.geojson) {
+                  if (location.geojson.type === "Point") {
+                    location.geojson.type = "Marker";
+                    location.geojson.coordinates = [
+                      (location.geojson.coordinates as any)[1],
+                      (location.geojson.coordinates as any)[0],
+                    ];
+                  }
+
                   // Para outros tipos (Polygon, Point, LineString), adiciona normalmente
                   dispatch({
                     type: "addElemento",
                     posicao: location.geojson.coordinates as any,
                     tipo: location.geojson.type,
                     textoElemento: location.display_name,
-                    nomeElemento: (location as any).name ?? location.display_name,
+                    nomeElemento:
+                      (location as any).name ?? location.display_name,
                     valor: {
                       ...location,
                       properties: { mode: location.geojson.type.toLowerCase() },
