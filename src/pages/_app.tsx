@@ -8,6 +8,9 @@ import CaixaDialogoProvider from "@/components/CaixaDialogo/CaixaDialogoProvider
 import { BarraAlertaProvider } from "@/components/BarraAlerta/BarraAlertaProvider";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
+import { ThemeProvider } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+import { muiTheme } from "@/styles/muiTheme";
 
 export default function App({
   Component,
@@ -16,11 +19,14 @@ export default function App({
   return (
     <SessionProvider session={session}>
       <GoogleAnalytics trackPageViews />
-      <LocalizationProvider dateAdapter={AdapterMoment}>
-        <Component {...pageProps} />
-      </LocalizationProvider>
-      <CaixaDialogoProvider />
-      <BarraAlertaProvider />
+      <ThemeProvider theme={muiTheme}>
+        <CssBaseline />
+        <LocalizationProvider dateAdapter={AdapterMoment}>
+          <Component {...pageProps} />
+        </LocalizationProvider>
+        <CaixaDialogoProvider />
+        <BarraAlertaProvider />
+      </ThemeProvider>
     </SessionProvider>
   );
 }

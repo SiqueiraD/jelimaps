@@ -1,0 +1,45 @@
+/* Estilos específicos para o Studio */
+
+#studioMapa .MuiSpeedDialAction-staticTooltipLabel {
+  width: max-content;
+}
+
+.currentTime {
+  background-color: #ff0000 !important;
+  width: 3px !important;
+}
+
+#parentSeletorResize:active,
+.borda-seletora-ativa {
+  background: var(--color-primary) !important;
+}
+
+.custom-control-undo {
+  padding-left: 10px;
+  padding-top: 5px;
+}
+
+/* Group Frame Component */
+.group-frame {
+  position: relative;
+  border: 1px solid black;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.group-frame .title {
+  position: absolute;
+  top: -13px;
+  left: 10px;
+  background: white;
+  padding: 0 5px;
+}
+
+/* Tab Panel Propriedades */
+.tabPanel-propriedades .MuiFormControl-root {
+  padding-top: 1vw;
+}
+
+.tabPanel-propriedades .MuiFormLabel-root {
+  top: 1vw;
+}

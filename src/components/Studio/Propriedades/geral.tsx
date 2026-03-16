@@ -11,6 +11,9 @@ import {
   Switch,
   TextField,
   Typography,
+  RadioGroup,
+  Radio,
+  FormLabel,
 } from "@mui/material";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import {
@@ -157,6 +160,33 @@ export default function Geral() {
                 Tempo
               </Typography>
 
+              <FormControl component="fieldset">
+                <FormLabel component="legend">Tipo de Tempo</FormLabel>
+                <RadioGroup
+                  row
+                  value={formik.values.tipoTempo ?? "real"}
+                  onChange={(e) => {
+                    dispatch({
+                      type: "alteraPropriedadeGeral",
+                      nomePropriedade: "tipoTempo",
+                      valorPropriedade: e.target.value,
+                      formik: formik,
+                    });
+                  }}
+                >
+                  <FormControlLabel
+                    value="real"
+                    control={<Radio />}
+                    label="Tempo Real (Data/Hora)"
+                  />
+                  <FormControlLabel
+                    value="numerico"
+                    control={<Radio />}
+                    label="Tempo Numérico (Inteiros)"
+                  />
+                </RadioGroup>
+              </FormControl>
+
               <Typography>Duração apresentação</Typography>
               <TimePicker
                 views={["minutes", "seconds"]}
@@ -182,37 +212,72 @@ export default function Geral() {
                   }
                 }}
               />
-              <TextField
-                fullWidth
-                id="cenaInicio"
-                name="cenaInicio"
-                label="Inicio"
-                type="datetime-local"
-                value={formik.values.cenaInicio}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={
-                  formik.touched.cenaInicio && Boolean(formik.errors.cenaInicio)
-                }
-                helperText={
-                  formik.touched.cenaInicio && formik.errors.cenaInicio
-                }
-              />
-              <TextField
-                fullWidth
-                id="cenaFim"
-                name="cenaFim"
-                label="Final"
-                type="datetime-local"
-                value={formik.values.cenaFim}
-                inputProps={{
-                  step: 1,
-                }}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.cenaFim && Boolean(formik.errors.cenaFim)}
-                helperText={formik.touched.cenaFim && formik.errors.cenaFim}
-              />
+              {formik.values.tipoTempo === "numerico" ? (
+                <>
+                  <TextField
+                    fullWidth
+                    id="cenaInicio"
+                    name="cenaInicio"
+                    label="Tempo Inicial (Número)"
+                    type="number"
+                    value={formik.values.cenaInicio}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={
+                      formik.touched.cenaInicio && Boolean(formik.errors.cenaInicio)
+                    }
+                    helperText={
+                      formik.touched.cenaInicio && formik.errors.cenaInicio
+                    }
+                  />
+                  <TextField
+                    fullWidth
+                    id="cenaFim"
+                    name="cenaFim"
+                    label="Tempo Final (Número)"
+                    type="number"
+                    value={formik.values.cenaFim}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.cenaFim && Boolean(formik.errors.cenaFim)}
+                    helperText={formik.touched.cenaFim && formik.errors.cenaFim}
+                  />
+                </>
+              ) : (
+                <>
+                  <TextField
+                    fullWidth
+                    id="cenaInicio"
+                    name="cenaInicio"
+                    label="Inicio"
+                    type="datetime-local"
+                    value={formik.values.cenaInicio}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={
+                      formik.touched.cenaInicio && Boolean(formik.errors.cenaInicio)
+                    }
+                    helperText={
+                      formik.touched.cenaInicio && formik.errors.cenaInicio
+                    }
+                  />
+                  <TextField
+                    fullWidth
+                    id="cenaFim"
+                    name="cenaFim"
+                    label="Final"
+                    type="datetime-local"
+                    value={formik.values.cenaFim}
+                    inputProps={{
+                      step: 1,
+                    }}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.cenaFim && Boolean(formik.errors.cenaFim)}
+                    helperText={formik.touched.cenaFim && formik.errors.cenaFim}
+                  />
+                </>
+              )}
             </Container>
 
             <Container className="group-frame">

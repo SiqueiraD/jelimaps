@@ -1,3 +1,5 @@
+const { colors, spacing, typography, shadows } = require('./src/styles/theme');
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
@@ -7,11 +9,95 @@ module.exports = {
   ],
   corePlugins: { preflight: false },
   theme: {
+    // Sobrescreve os padrões do Tailwind com nossos tokens
+    colors: {
+      transparent: 'transparent',
+      current: 'currentColor',
+      white: '#ffffff',
+      black: '#000000',
+      primary: colors.primary,
+      secondary: colors.secondary,
+      error: colors.error,
+      warning: colors.warning,
+      info: colors.info,
+      success: colors.success,
+      gray: colors.grey,
+    },
+    spacing: {
+      0: '0px',
+      xxs: `${spacing.xxs}px`,
+      xs: `${spacing.xs}px`,
+      sm: `${spacing.sm}px`,
+      md: `${spacing.md}px`,
+      lg: `${spacing.lg}px`,
+      xl: `${spacing.xl}px`,
+      xxl: `${spacing.xxl}px`,
+      xxxl: `${spacing.xxxl}px`,
+      // Mantém compatibilidade com classes existentes
+      1: '4px',
+      2: '8px',
+      3: '12px',
+      4: '16px',
+      5: '20px',
+      6: '24px',
+      8: '32px',
+      10: '40px',
+      12: '48px',
+    },
+    fontSize: {
+      xs: typography.fontSize.xs,
+      sm: typography.fontSize.sm,
+      base: typography.fontSize.base,
+      lg: typography.fontSize.lg,
+      xl: typography.fontSize.xl,
+      '2xl': typography.fontSize['2xl'],
+      '3xl': typography.fontSize['3xl'],
+      '4xl': typography.fontSize['4xl'],
+      '5xl': typography.fontSize['5xl'],
+    },
+    fontWeight: {
+      light: typography.fontWeight.light,
+      normal: typography.fontWeight.regular,
+      medium: typography.fontWeight.medium,
+      semibold: typography.fontWeight.semibold,
+      bold: typography.fontWeight.bold,
+    },
+    screens: {
+      xs: '0px',
+      sm: '600px',
+      md: '960px',
+      lg: '1280px',
+      xl: '1920px',
+    },
     extend: {
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+      },
+      boxShadow: {
+        sm: shadows.custom.soft.sm,
+        md: shadows.custom.soft.md,
+        lg: shadows.custom.soft.lg,
+        xl: shadows.custom.soft.xl,
+        elevation1: shadows.elevation[1],
+        elevation2: shadows.elevation[2],
+        elevation3: shadows.elevation[3],
+        elevation4: shadows.elevation[4],
+        elevation6: shadows.elevation[6],
+        elevation8: shadows.elevation[8],
+        elevation12: shadows.elevation[12],
+        elevation16: shadows.elevation[16],
+        elevation24: shadows.elevation[24],
+      },
+      borderRadius: {
+        none: '0',
+        sm: '2px',
+        DEFAULT: '4px',
+        md: '4px',
+        lg: '8px',
+        xl: '12px',
+        full: '9999px',
       },
     },
   },
