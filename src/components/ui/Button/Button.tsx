@@ -7,7 +7,7 @@ export interface ButtonProps extends MuiButtonProps {
   fullWidth?: boolean;
 }
 
-const StyledButton = styled(MuiButton)(({ theme }) => ({
+const StyledButton = styled(MuiButton)(() => ({
   // Usa os tokens do tema para garantir consistência
   '&.MuiButton-root': {
     transition: 'all 0.3s ease',
