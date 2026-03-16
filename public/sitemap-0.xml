@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
-<url><loc>https://www.jelimaps.com.br</loc><lastmod>2023-12-06T01:30:41.736Z</lastmod></url>
-<url><loc>https://www.jelimaps.com.br/about</loc><lastmod>2023-12-06T01:30:41.737Z</lastmod></url>
-<url><loc>https://www.jelimaps.com.br/mapa</loc><lastmod>2023-12-06T01:30:41.737Z</lastmod></url>
-<url><loc>https://www.jelimaps.com.br/mapa/decider</loc><lastmod>2023-12-06T01:30:41.737Z</lastmod></url>
-<url><loc>https://www.jelimaps.com.br/mapa/visualizacao</loc><lastmod>2023-12-06T01:30:41.737Z</lastmod></url>
-<url><loc>https://www.jelimaps.com.br/server-sitemap.xml</loc><lastmod>2023-12-06T01:30:41.737Z</lastmod></url>
+<url><loc>https://www.jelimaps.com.br</loc><lastmod>2026-03-16T00:53:19.080Z</lastmod></url>
+<url><loc>https://www.jelimaps.com.br/about</loc><lastmod>2026-03-16T00:53:19.081Z</lastmod></url>
+<url><loc>https://www.jelimaps.com.br/mapa</loc><lastmod>2026-03-16T00:53:19.081Z</lastmod></url>
+<url><loc>https://www.jelimaps.com.br/mapa/decider</loc><lastmod>2026-03-16T00:53:19.081Z</lastmod></url>
+<url><loc>https://www.jelimaps.com.br/mapa/visualizacao</loc><lastmod>2026-03-16T00:53:19.081Z</lastmod></url>
+<url><loc>https://www.jelimaps.com.br/perfil</loc><lastmod>2026-03-16T00:53:19.081Z</lastmod></url>
 </urlset>

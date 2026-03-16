@@ -34,12 +34,11 @@ const ConteudoElemento = (propsConteudoElemento: {
       )
     ) {
       if (
-        (propsConteudoElemento.draw as any)._store &&
-        (propsConteudoElemento.draw as any)._store.store[
+        propsConteudoElemento.draw?.hasFeature(
           propsConteudoElemento.elemento.id.toString()
-        ]
+        )
       )
-        propsConteudoElemento.draw.removeFeatures([
+        propsConteudoElemento.draw?.removeFeatures([
           propsConteudoElemento.elemento.id.toString(),
         ]);
       return true;
