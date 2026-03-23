@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import {
   Button,
   ButtonGroup,
@@ -29,6 +29,9 @@ import moment from "moment";
 import { MODO_VISAO } from "@/components/Mapa/mapaContextTypes";
 import tiposPlanoFundo from "@/components/Mapa/PlanoFundoMapaComum/tiposPlanoFundo";
 import ListaElementos from "./ListaElementos";
+import { useSession } from "next-auth/react";
+import { useMapaStore } from "@/stores/mapaStore";
+import useBarraAlerta from "@/components/BarraAlerta/useBarraAlerta";
 
 export default function Geral() {
   const mapaContext = useMapaContext();
@@ -36,6 +39,56 @@ export default function Geral() {
   const dispatch = useMapaDispatch();
   const { openModalConfirm } = useCaixaDialogo();
   const router = useRouter();
+  const { status } = useSession();
+  const { mapaId, tituloMapa, setSavedMap } = useMapaStore();
+  const barraAlerta = useBarraAlerta();
+  const tituloRef = useRef(tituloMapa);
+
+  const handleSalvar = () => {
+    tituloRef.current = tituloMapa;
+    openModalConfirm({
+      title: mapaId ? "Atualizar mapa" : "Salvar novo mapa",
+      message: "",
+      componentMessage: (
+        <TextField
+          label="Título do mapa"
+          defaultValue={tituloMapa}
+          onChange={(e) => { tituloRef.current = e.target.value; }}
+          fullWidth
+          autoFocus
+          margin="dense"
+        />
+      ),
+      confirmarTitle: "Salvar",
+      onConfirm: async () => {
+        const titulo = tituloRef.current?.trim() || "Mapa sem título";
+        try {
+          if (mapaId) {
+            const res = await fetch(`/api/mapas/${mapaId}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ titulo, informacoes: mapaContext }),
+            });
+            if (!res.ok) throw new Error((await res.json()).error);
+            setSavedMap(mapaId, titulo);
+          } else {
+            const res = await fetch("/api/mapas", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ titulo, informacoes: mapaContext, publico: false }),
+            });
+            if (!res.ok) throw new Error((await res.json()).error);
+            const { id } = await res.json();
+            setSavedMap(id, titulo);
+          }
+          barraAlerta.showSnackBar({ text: "Mapa salvo com sucesso!", color: "success" });
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : "Erro ao salvar";
+          barraAlerta.showSnackBar({ text: msg, color: "error" });
+        }
+      },
+    });
+  };
 
   return (
     <Formik
@@ -83,6 +136,11 @@ export default function Geral() {
               >
                 Resetar
               </Button>
+              {status === "authenticated" && (
+                <Button onClick={handleSalvar} color="primary" variant="contained">
+                  {mapaId ? "Atualizar" : "Salvar"}
+                </Button>
+              )}
               {/* <Button component="label">
                 Importar
                 <VisuallyHiddenInput type="file" />

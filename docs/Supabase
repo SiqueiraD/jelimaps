@@ -1,0 +1,84 @@
+-- ============================================
+-- CONFIGURAÇÃO DAS TABELAS
+-- Autenticação: NextAuth + Google OAuth
+-- Autorização: service_role key (bypassa RLS) +
+--              verificações explícitas no servidor
+-- ============================================
+
+-- 1. EXTENSÃO PARA UUID
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 2. TIPO ENUM PARA PERMISSÕES
+DO $$ BEGIN
+  CREATE TYPE permissao_mapa AS ENUM ('view', 'edit');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+-- ============================================
+-- 3. TABELAS
+-- ============================================
+
+-- 3.1 USUARIOS (gerenciado pelo NextAuth via jwt callback)
+CREATE TABLE IF NOT EXISTS usuarios (
+  id UUID PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  nome TEXT,
+  data_criacao TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 3.2 MAPAS
+CREATE TABLE IF NOT EXISTS mapas (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  dono_id UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  titulo TEXT NOT NULL DEFAULT 'Mapa sem título',
+  publico BOOLEAN NOT NULL DEFAULT FALSE,
+  informacoes JSONB NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_mapas_dono_id ON mapas(dono_id);
+
+-- 3.3 USUARIOS_MAPAS (compartilhamentos)
+CREATE TABLE IF NOT EXISTS usuarios_mapas (
+  usuario_id UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  mapa_id UUID NOT NULL REFERENCES mapas(id) ON DELETE CASCADE,
+  permissao permissao_mapa NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  PRIMARY KEY (usuario_id, mapa_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_usuarios_mapas_usuario_id ON usuarios_mapas(usuario_id);
+CREATE INDEX IF NOT EXISTS idx_usuarios_mapas_mapa_id ON usuarios_mapas(mapa_id);
+
+-- 3.4 IMAGENS (próxima funcionalidade)
+CREATE TABLE IF NOT EXISTS imagens (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  mapa_id UUID NOT NULL REFERENCES mapas(id) ON DELETE CASCADE,
+  nome TEXT,
+  binario BYTEA NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_imagens_mapa_id ON imagens(mapa_id);
+
+-- ============================================
+-- 4. TRIGGER PARA ATUALIZAR UPDATED_AT
+-- ============================================
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_mapas_updated_at
+  BEFORE UPDATE ON mapas
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
+-- FIM DA CONFIGURAÇÃO
+-- ============================================

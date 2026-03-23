@@ -18,6 +18,10 @@ interface MapaStore {
   // Estado do mapa
   context: mapaContextSchema;
   
+  // Identificação do mapa salvo no Supabase
+  mapaId: string | null;
+  tituloMapa: string;
+
   // Estado undo/redo
   undoState: UndoState<mapaContextSchema>;
   
@@ -28,6 +32,7 @@ interface MapaStore {
   redo: () => void;
   canUndo: () => boolean;
   canRedo: () => boolean;
+  setSavedMap: (id: string, titulo: string) => void;
   
   // Helper para obter o contexto inicial
   getInitialContext: () => mapaContextSchema;
@@ -100,7 +105,9 @@ export const useMapaStore = create<MapaStore>()(
       (set, get) => ({
         // Estado inicial
         context: createInitialContext(),
-        
+        mapaId: null,
+        tituloMapa: 'Mapa sem título',
+
         undoState: {
           past: [],
           present: createInitialContext(),
@@ -156,10 +163,16 @@ export const useMapaStore = create<MapaStore>()(
           });
         },
         
+        setSavedMap: (id: string, titulo: string) => {
+          set({ mapaId: id, tituloMapa: titulo });
+        },
+
         reset: (newContext?: mapaContextSchema) => {
           const initialContext = newContext ?? createInitialContext();
           set({
             context: initialContext,
+            mapaId: null,
+            tituloMapa: 'Mapa sem título',
             undoState: {
               past: [],
               present: initialContext,
@@ -226,6 +239,8 @@ export const useMapaStore = create<MapaStore>()(
           const initialContext = createInitialContext();
           set({
             context: initialContext,
+            mapaId: null,
+            tituloMapa: 'Mapa sem título',
             undoState: {
               past: [],
               present: initialContext,
@@ -240,7 +255,7 @@ export const useMapaStore = create<MapaStore>()(
         partialize: (state) => {
           // Apenas salvar o context, não o estado completo
           // Isso reduz significativamente o tamanho do armazenamento
-          return { context: state.context } as MapaStore;
+          return { context: state.context, mapaId: state.mapaId, tituloMapa: state.tituloMapa } as MapaStore;
         },
         onRehydrateStorage: () => (state) => {
           // Ao restaurar do storage, inicializar undoState corretamente

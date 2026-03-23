@@ -27,12 +27,12 @@ interface Page {
 const ResponsiveAppBar: React.FC = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const loading = status === 'loading';
   const Logo = "JeliMaps";
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
   const { openModalConfirm } = useCaixaDialogo();
   const hasStoredContext = useMapaStore((state) => state.hasStoredContext());
-  const loading = status === 'loading';
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
