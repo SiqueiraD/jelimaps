@@ -1,35 +1,37 @@
-import React, { useCallback, useEffect } from "react";
-import {
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-  Typography,
-  styled,
-  Button as ButtonMUI,
-  ListItem,
-  List,
-} from "@mui/material";
+import Button from '@/components/Atomic/Button';
+import ImageUploadField from '@/components/Atomic/ImageUploadField';
+import useCaixaDialogo from '@/components/CaixaDialogo/useCaixaDialogo';
+import ImageResolver from '@/components/ImageUrlResolver';
 import {
   useMapaContext,
   useMapaDispatch,
   useMapaUndo,
-} from "@/components/Mapa/MapaContext";
-import useCaixaDialogo from "@/components/CaixaDialogo/useCaixaDialogo";
-import ImageResolver from "@/components/ImageUrlResolver";
-import Button from "@/components/Atomic/Button";
-import useWindowDimensions from "@/components/Studio/useWindowDimensions";
-import Image from "next/image";
+} from '@/components/Mapa/MapaContext';
+import useWindowDimensions from '@/components/Studio/useWindowDimensions';
+import { useMapaStore } from '@/stores/mapaStore';
+import {
+  Button as ButtonMUI,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  List,
+  ListItem,
+  TextField,
+  Typography,
+  styled,
+} from '@mui/material';
+import { useSession } from 'next-auth/react';
+import React, { useCallback, useEffect } from 'react';
 
-const VisuallyHiddenInput = styled("input")({
-  clip: "rect(0 0 0 0)",
-  clipPath: "inset(50%)",
+const VisuallyHiddenInput = styled('input')({
+  clip: 'rect(0 0 0 0)',
+  clipPath: 'inset(50%)',
   height: 1,
-  overflow: "hidden",
-  position: "absolute",
+  overflow: 'hidden',
+  position: 'absolute',
   bottom: 0,
   left: 0,
-  whiteSpace: "nowrap",
+  whiteSpace: 'nowrap',
   width: 1,
 });
 
@@ -37,74 +39,163 @@ export default function ModoVisaoDialog() {
   const { openModalConfirm, closeModalConfirm, onConfirm, open } =
     useCaixaDialogo();
   const mapaContext = useMapaContext();
+  const { mapaId, tituloMapa, setStore } = useMapaStore();
+  const { status } = useSession();
+  const isAuthenticated = status === 'authenticated';
   const dispatch = useMapaDispatch();
-  const nameRef = React.useRef("");
+  const imageUrlRef = React.useRef('');
   const { reset } = useMapaUndo();
   const { width, height } = useWindowDimensions();
 
-  const handleOpenStreetMap = useCallback(() => {
-    dispatch({
-      type: "modoVisao",
-      modoVisao: "OpenStreetMap",
-    });
-    closeModalConfirm(null, null);
-  }, [closeModalConfirm, dispatch]);
-
-  const handleMapaProprioComImagem = useCallback(async () => {
-    dispatch({
-      type: "modoVisao",
-      modoVisao: "Mapa Próprio",
-      valor: await ImageResolver.UrlResolver(nameRef.current),
-    });
-    closeModalConfirm(null, null);
-  }, [closeModalConfirm, dispatch]);
-
-  const handleMapaProprio = useCallback(async () => {
-    const isImagemValida = await ImageResolver.isValidUrl(nameRef.current);
-    const urlImagem = await ImageResolver.UrlResolver(nameRef.current);
-    openModalConfirm({
-      title: "",
-      message: "",
-      onConfirm,
-      cancelarNotVisible: true,
-      confirmarNotVisible: true,
-      fecharApenasComEvento: true,
-      componentMessage: (
-        <div>
-          <DialogTitle>
-            Por favor, insira a url da imagem do seu mapa!
-          </DialogTitle>
-          <DialogContent dividers>
-            <TextField
-              id="outlined-controlled"
-              label="Link da Imagem"
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                nameRef.current = event.target.value;
-              }}
-            />
-            {nameRef.current && nameRef.current !== "" && isImagemValida ? (
-              <Image
-                alt="MapaProprio"
-                src={urlImagem}
-                width={width * 0.21}
-                height={height * 0.21}
-                placeholder="blur"
-                blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+  // Abre o dialog de imagem para Mapa Próprio. Chama dispatch modoVisao ao salvar.
+  const abrirDialogImagem = useCallback(
+    (idAtual: string | null) => {
+      imageUrlRef.current = '';
+      openModalConfirm({
+        title: '',
+        message: '',
+        onConfirm: () => {},
+        cancelarNotVisible: true,
+        confirmarNotVisible: true,
+        fecharApenasComEvento: true,
+        componentMessage: (
+          <div>
+            <DialogTitle>
+              Por favor, insira a url da imagem do seu mapa!
+            </DialogTitle>
+            <DialogContent dividers>
+              <ImageUploadField
+                defaultValue=""
+                onChange={(url) => {
+                  imageUrlRef.current = url;
+                }}
+                mapaId={idAtual}
+                previewWidth={Math.round(width * 0.21)}
+                previewHeight={Math.round(height * 0.21)}
               />
-            ) : (
-              <div> Copie um link válido</div>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleMapaProprio}>Atualizar</Button>
-            {nameRef.current && nameRef.current !== "" && isImagemValida && (
-              <Button onClick={handleMapaProprioComImagem}>Salvar</Button>
-            )}
-          </DialogActions>
-        </div>
-      ),
-    });
-  }, [openModalConfirm, onConfirm, width, height, handleMapaProprioComImagem]);
+            </DialogContent>
+            <DialogActions>
+              <Button
+                onClick={async () => {
+                  const urlResolvida = await ImageResolver.UrlResolver(
+                    imageUrlRef.current
+                  );
+                  dispatch({
+                    type: 'modoVisao',
+                    modoVisao: 'Mapa Próprio',
+                    valor: urlResolvida,
+                  });
+                  closeModalConfirm(null, null);
+                }}
+              >
+                Salvar
+              </Button>
+            </DialogActions>
+          </div>
+        ),
+      });
+    },
+    [openModalConfirm, closeModalConfirm, dispatch, width, height]
+  );
+
+  const salvarEContinuar = useCallback(
+    async (titulo: string, onCriado: (id: string) => void) => {
+      try {
+        const res = await fetch('/api/mapas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            titulo,
+            informacoes: mapaContext,
+            publico: false,
+          }),
+        });
+        if (res.ok) {
+          const { id } = await res.json();
+          setStore(
+            { mapaId: id, tituloMapa: titulo },
+            { syncSavedVersion: true }
+          );
+          dispatch({
+            type: 'alteraPropriedadeGeral',
+            nomePropriedade: 'id',
+            valorPropriedade: id,
+          });
+          onCriado(id);
+          window.history.replaceState(null, '', `/mapa/${id}`);
+        }
+      } catch {
+        // falha silenciosa
+      }
+    },
+    [mapaContext, setStore, dispatch]
+  );
+
+  const pedirTituloESalvar = useCallback(
+    (onCriado: (id: string) => void) => {
+      const tituloRef = { current: tituloMapa || '' };
+      openModalConfirm({
+        title: 'Qual é o nome do seu mapa?',
+        message: '',
+        componentMessage: (
+          <TextField
+            label="Título do mapa"
+            defaultValue={tituloRef.current}
+            onChange={(e) => {
+              tituloRef.current = e.target.value;
+            }}
+            fullWidth
+            autoFocus
+            margin="dense"
+          />
+        ),
+        confirmarTitle: 'Criar mapa',
+        onConfirm: async () => {
+          const titulo = tituloRef.current.trim() || 'Mapa sem título';
+          await salvarEContinuar(titulo, onCriado);
+        },
+      });
+    },
+    [openModalConfirm, tituloMapa, salvarEContinuar]
+  );
+
+  const handleOpenStreetMap = useCallback(() => {
+    closeModalConfirm(null, null);
+    if (mapaId) {
+      dispatch({ type: 'modoVisao', modoVisao: 'OpenStreetMap' });
+    } else if (isAuthenticated) {
+      pedirTituloESalvar(() => {
+        dispatch({ type: 'modoVisao', modoVisao: 'OpenStreetMap' });
+      });
+    } else {
+      dispatch({ type: 'modoVisao', modoVisao: 'OpenStreetMap' });
+    }
+  }, [
+    closeModalConfirm,
+    dispatch,
+    mapaId,
+    isAuthenticated,
+    pedirTituloESalvar,
+  ]);
+
+  const handleMapaProprio = useCallback(() => {
+    closeModalConfirm(null, null);
+    if (mapaId) {
+      abrirDialogImagem(mapaId);
+    } else if (isAuthenticated) {
+      pedirTituloESalvar((id) => {
+        abrirDialogImagem(id);
+      });
+    } else {
+      abrirDialogImagem(null);
+    }
+  }, [
+    closeModalConfirm,
+    mapaId,
+    isAuthenticated,
+    pedirTituloESalvar,
+    abrirDialogImagem,
+  ]);
 
   useEffect(() => {
     if (!!mapaContext.modoVisao && open) {
@@ -112,8 +203,8 @@ export default function ModoVisaoDialog() {
     }
     if (!mapaContext.modoVisao) {
       openModalConfirm({
-        title: "",
-        message: "",
+        title: '',
+        message: '',
         onConfirm,
         cancelarNotVisible: true,
         confirmarNotVisible: true,
@@ -189,7 +280,7 @@ export default function ModoVisaoDialog() {
                     var arquivo = e.target.files[0];
 
                     // Verificar se o arquivo tem a extensão .griot
-                    if (arquivo.name.endsWith(".griot")) {
+                    if (arquivo.name.endsWith('.griot')) {
                       // Criar um objeto FileReader para ler o arquivo
                       var leitor = new FileReader();
 
@@ -204,13 +295,13 @@ export default function ModoVisaoDialog() {
 
                           // Mostrar o JSON na tela
                           reset(json);
-                          document.getElementById("resultado").innerHTML =
+                          document.getElementById('resultado').innerHTML =
                             JSON.stringify(json, null, 2);
                           closeModalConfirm(null, null);
                         } catch (erro) {
                           // Mostrar o erro na tela
-                          document.getElementById("resultado").innerHTML =
-                            "Erro ao converter o texto em JSON: " +
+                          document.getElementById('resultado').innerHTML =
+                            'Erro ao converter o texto em JSON: ' +
                             erro.message;
                         }
                       };
@@ -219,8 +310,8 @@ export default function ModoVisaoDialog() {
                       leitor.readAsText(arquivo);
                     } else {
                       // Mostrar uma mensagem de erro na tela
-                      document.getElementById("resultado").innerHTML =
-                        "O arquivo selecionado não tem a extensão .griot";
+                      document.getElementById('resultado').innerHTML =
+                        'O arquivo selecionado não tem a extensão .griot';
                     }
                   }}
                 />

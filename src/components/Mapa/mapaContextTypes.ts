@@ -69,6 +69,8 @@ export const MODO_VISAO = {
 
 export type mapaContextSchema = periodoInicioFim &
   telaMapa & {
+    id?: string;
+    titulo?: string;
     elementoInteracao: elementoProto;
     elementoFoco?: tipoElemento;
     elementosFoco?: { id: NIL }[];

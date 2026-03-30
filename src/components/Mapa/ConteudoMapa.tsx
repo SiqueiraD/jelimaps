@@ -1,46 +1,40 @@
-import { Marker, Rectangle, Popup, useMap } from "react-leaflet";
-import {
-  LatLngBounds,
-  divIcon,
-  GeoJSON,
-} from "leaflet";
-import React from "react";
-import { useMapaContext, useMapaDispatch } from "@/components/Mapa/MapaContext";
-import { Button, ButtonGroup } from "@mui/material";
+import { useMapaContext, useMapaDispatch } from '@/components/Mapa/MapaContext';
+import { Button, ButtonGroup } from '@mui/material';
+import { divIcon, GeoJSON, LatLngBounds } from 'leaflet';
+import { Marker, Popup, Rectangle, useMap } from 'react-leaflet';
 // import Elementos from "./Elementos";
-import { LocationOn } from "@mui/icons-material";
-import ReactDOMServer from "react-dom/server";
-import useCaixaDialogo from "../CaixaDialogo/useCaixaDialogo";
-import ImageOverlayRotated from "../Mapa/ImageOverlayRotated";
-import { TerraDraw } from "terra-draw";
-import MapaContextChanger from "../Mapa/ContextChangers";
-import ConteudoElemento from "../Mapa/ConteudoElemento";
-import { montarDispatchSelecionarElemento } from "./MapaUtils/selecionarElementoHelper";
+import { LocationOn } from '@mui/icons-material';
+import ReactDOMServer from 'react-dom/server';
+import { TerraDraw } from 'terra-draw';
+import useCaixaDialogo from '../CaixaDialogo/useCaixaDialogo';
+import ConteudoElemento from '../Mapa/ConteudoElemento';
+import MapaContextChanger from '../Mapa/ContextChangers';
+import ImageOverlayRotated from '../Mapa/ImageOverlayRotated';
+import { montarDispatchSelecionarElemento } from './MapaUtils/selecionarElementoHelper';
 
 const ConteudoMapa = (propsConteudoMapa: {
   draw?: TerraDraw;
   isApresentacao?: boolean;
 }) => {
-    const map = useMap();
-    map.eachLayer((layer) => {
-      if (layer instanceof GeoJSON) {
-        map.removeLayer(layer);
-      }
-    });
+  const map = useMap();
+  map.eachLayer((layer) => {
+    if (layer instanceof GeoJSON) {
+      map.removeLayer(layer);
+    }
+  });
   const mapaContext = useMapaContext();
   const dispatch = useMapaDispatch();
   const { openModalConfirm } = useCaixaDialogo();
 
   const corItemSelecionadoFoco = (elemento) => {
     return MapaContextChanger.isElementoSelecionado(mapaContext, elemento.id)
-      ? "#000000"
-      : elemento.color ?? "#0d6efd";
+      ? '#000000'
+      : elemento.color ?? '#0d6efd';
   };
   const cliqueElementoNoMapa = (elemento, evento) => {
     if (evento.originalEvent.shiftKey || evento.originalEvent.ctrlKey)
-      dispatch({ type: "adicionarElementoFoco", elemento: elemento });
-    else
-      dispatch(montarDispatchSelecionarElemento(elemento, mapaContext));
+      dispatch({ type: 'adicionarElementoFoco', elemento: elemento });
+    else dispatch(montarDispatchSelecionarElemento(elemento, mapaContext));
   };
 
   return (
@@ -67,15 +61,15 @@ const ConteudoMapa = (propsConteudoMapa: {
                   !propsConteudoMapa.isApresentacao
                 }
                 icon={divIcon({
-                  className: "icon-marker",
+                  className: 'icon-marker',
                   html: ReactDOMServer.renderToString(
                     <LocationOn
                       id={marker.id}
                       style={{
                         color: corItemSelecionadoFoco(marker),
-                        position: "absolute",
-                        top: "-150%",
-                        left: "-67%",
+                        position: 'absolute',
+                        top: '-150%',
+                        left: '-67%',
                       }}
                     />
                   ),
@@ -87,10 +81,10 @@ const ConteudoMapa = (propsConteudoMapa: {
                     cliqueElementoNoMapa(origin[index], e),
                   moveend: (e) => {
                     dispatch({
-                      type: "editarPropriedade",
+                      type: 'editarPropriedade',
                       tipo: marker.dataRef,
                       id: marker.id,
-                      nomePropriedade: "geometry",
+                      nomePropriedade: 'geometry',
                       valorPropriedade: {
                         ...marker.geometry,
                         coordinates: [
@@ -115,11 +109,11 @@ const ConteudoMapa = (propsConteudoMapa: {
                         <Button
                           onClick={() => {
                             openModalConfirm({
-                              title: "Deletar item",
-                              message: "Você tem certeza disso?",
+                              title: 'Deletar item',
+                              message: 'Você tem certeza disso?',
                               onConfirm: () => {
                                 dispatch({
-                                  type: "removeElements",
+                                  type: 'removeElements',
                                 });
                               },
                             });
@@ -202,20 +196,14 @@ const ConteudoMapa = (propsConteudoMapa: {
       {mapaContext.conteudo &&
         mapaContext.conteudo.ImageOverlay &&
         mapaContext.conteudo.ImageOverlay.length > 0 &&
-        mapaContext.conteudo.ImageOverlay.filter(
-          (image) =>
-            new Date(image.cenaInicio) <= new Date(mapaContext.tempo) &&
-            new Date(image.cenaFim) >= new Date(mapaContext.tempo)
-        ).map((image, index) => {
-          return (
-            <ImageOverlayRotated
-              key={`ImageOverlay#${index}`}
-              x={image}
-              cliqueElementoNoMapa={cliqueElementoNoMapa}
-              isApresentacao={propsConteudoMapa.isApresentacao}
-            />
-          );
-        })}
+        mapaContext.conteudo.ImageOverlay.map((image) => (
+          <ImageOverlayRotated
+            key={`ImageOverlay-${image.id}`}
+            x={image}
+            cliqueElementoNoMapa={cliqueElementoNoMapa}
+            isApresentacao={propsConteudoMapa.isApresentacao}
+          />
+        ))}
 
       {!propsConteudoMapa.isApresentacao &&
         mapaContext.exibirLimiteCenas &&

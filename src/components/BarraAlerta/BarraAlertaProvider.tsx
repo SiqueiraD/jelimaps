@@ -34,7 +34,7 @@ const Alert = ({ item }: { item: SnackBarItemType }) => {
   }, [handleClose, item.autoHideDuration, item.color]);
 
   return (
-    <Grow key={item.key} timeout={500} in={open} style={{ marginBottom: 10 }}>
+    <Grow key={item.key} timeout={500} in={open}>
       <MuiAlert
         onClose={handleClose}
         severity={item.color}

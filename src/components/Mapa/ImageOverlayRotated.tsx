@@ -1,11 +1,11 @@
-import React, { useEffect, useRef } from "react";
-import "leaflet-imageoverlay-rotated";
-import L, { Bounds, LatLng } from "leaflet";
-import { Marker, useMap } from "react-leaflet";
-import { elementoComBounds } from "./mapaContextTypes";
-import { useMapaContext, useMapaDispatch } from "./MapaContext";
-import "leaflet.path.drag";
-import "leaflet-imageoverlay-rotated";
+import { usePresignedUrl } from '@/hooks/usePresignedUrl';
+import L, { Bounds, LatLng } from 'leaflet';
+import 'leaflet-imageoverlay-rotated';
+import 'leaflet.path.drag';
+import { useEffect, useRef } from 'react';
+import { Marker, useMap } from 'react-leaflet';
+import { useMapaContext, useMapaDispatch } from './MapaContext';
+import { elementoComBounds } from './mapaContextTypes';
 
 type Props = {
   x: elementoComBounds;
@@ -18,8 +18,83 @@ const ImageOverlayRotated = (props: Props) => {
   const map = useMap();
   const dispatch = useMapaDispatch();
   const mapaContext = useMapaContext();
-  const imageCurrentRef = useRef(null);
-  const eventMoveRef = useRef(null);
+  const imageCurrentRef = useRef<any>(null);
+  const isAddedToMapRef = useRef(false);
+  const eventMoveRef = useRef<any>(null);
+
+  // Refs para manter valores atualizados sem recriar a camada
+  const cliqueRef = useRef(cliqueElementoNoMapa);
+  const xRef = useRef(x);
+  cliqueRef.current = cliqueElementoNoMapa;
+  xRef.current = x;
+
+  const [resolvedUrl, refreshUrl] = usePresignedUrl(
+    x.urlImagem,
+    mapaContext.id
+  );
+
+  // Visibilidade baseada no tempo
+  const isVisible =
+    new Date(x.cenaInicio) <= new Date(mapaContext.tempo) &&
+    new Date(x.cenaFim) >= new Date(mapaContext.tempo);
+
+  // Criar a camada Leaflet UMA VEZ quando a URL resolver (ou mudar)
+  useEffect(() => {
+    if (!resolvedUrl || !(L.imageOverlay as any).rotated) return;
+
+    const im = (L.imageOverlay as any).rotated(
+      resolvedUrl,
+      xRef.current.positionTL,
+      xRef.current.positionTR,
+      xRef.current.positionBL,
+      {
+        interactive: !!cliqueRef.current,
+        bubblingMouseEvents: false,
+        ...xRef.current,
+      }
+    );
+
+    if (cliqueRef.current && !isApresentacao)
+      im.on('click', (e: any) => cliqueRef.current?.(xRef.current, e));
+    im.on('error', () => refreshUrl());
+    imageCurrentRef.current = im;
+    isAddedToMapRef.current = false;
+
+    return () => {
+      if (isAddedToMapRef.current) {
+        map.removeLayer(im);
+        isAddedToMapRef.current = false;
+      }
+      im.off('click');
+      im.off('error');
+      imageCurrentRef.current = null;
+    };
+  }, [resolvedUrl, map, isApresentacao, refreshUrl]);
+
+  // Controlar visibilidade: adicionar/remover do mapa apenas quando isVisible muda
+  useEffect(() => {
+    if (!imageCurrentRef.current) return;
+
+    if (isVisible && !isAddedToMapRef.current) {
+      map.addLayer(imageCurrentRef.current);
+      isAddedToMapRef.current = true;
+    } else if (!isVisible && isAddedToMapRef.current) {
+      map.removeLayer(imageCurrentRef.current);
+      isAddedToMapRef.current = false;
+    }
+  }, [isVisible, map, imageCurrentRef, resolvedUrl]);
+
+  // Atualizar posições sem recriar a camada
+  useEffect(() => {
+    if (imageCurrentRef.current) {
+      imageCurrentRef.current.reposition(
+        x.positionTL,
+        x.positionTR,
+        x.positionBL
+      );
+    }
+  }, [x.positionTL, x.positionTR, x.positionBL]);
+
   const centerUpdated = new LatLng(
     new Bounds(
       [x.positionTR[1], x.positionTR[0]],
@@ -32,12 +107,12 @@ const ImageOverlayRotated = (props: Props) => {
   );
 
   const dispatchReposition = (
-    nomePropriedade: "positionTL" | "positionTR" | "positionBL"
+    nomePropriedade: 'positionTL' | 'positionTR' | 'positionBL'
   ) => {
     dispatch({
-      type: "editarPropriedade",
+      type: 'editarPropriedade',
       id: x.id,
-      tipo: "ImageOverlay",
+      tipo: 'ImageOverlay',
       nomePropriedade,
       valorPropriedade: [
         eventMoveRef.current.latlng.lat,
@@ -47,27 +122,27 @@ const ImageOverlayRotated = (props: Props) => {
   };
 
   const reposition = (
-    nomePropriedade: "positionTL" | "positionTR" | "positionBL",
+    nomePropriedade: 'positionTL' | 'positionTR' | 'positionBL',
     valorPropriedade: any
   ) => {
     eventMoveRef.current = valorPropriedade;
     if (imageCurrentRef.current)
       switch (nomePropriedade) {
-        case "positionTL":
+        case 'positionTL':
           imageCurrentRef.current.reposition(
             valorPropriedade.latlng,
             x.positionTR,
             x.positionBL
           );
           break;
-        case "positionTR":
+        case 'positionTR':
           imageCurrentRef.current.reposition(
             x.positionTL,
             valorPropriedade.latlng,
             x.positionBL
           );
           break;
-        case "positionBL":
+        case 'positionBL':
           imageCurrentRef.current.reposition(
             x.positionTL,
             x.positionTR,
@@ -97,7 +172,7 @@ const ImageOverlayRotated = (props: Props) => {
   const dispatchRepositionCenter = () => {
     const diffPositions = getDiffPositionsByCenter(eventMoveRef.current);
     dispatch({
-      type: "movendoImagem",
+      type: 'movendoImagem',
       id: x.id,
       valor: diffPositions,
     });
@@ -115,31 +190,8 @@ const ImageOverlayRotated = (props: Props) => {
       );
   };
 
-  useEffect(() => {
-    if ((L.imageOverlay as any).rotated) {
-      const im = (L.imageOverlay as any).rotated(
-        x.urlImagem,
-        x.positionTL,
-        x.positionTR,
-        x.positionBL,
-        {
-          interactive: !!cliqueElementoNoMapa,
-          bubblingMouseEvents: false,
-          ...x,
-        }
-      );
-      map.addLayer(im);
-      // else map.addLayer(im);
-      if (cliqueElementoNoMapa && !isApresentacao)
-        im.on("click", (e) => cliqueElementoNoMapa(x, e));
-      imageCurrentRef.current = im;
-      return () => {
-        map.removeLayer(im);
-        if (cliqueElementoNoMapa && !isApresentacao)
-          im.off("click", (e) => cliqueElementoNoMapa(x, e));
-      };
-    }
-  });
+  // Renderizar markers de edição apenas se visível e selecionado
+  if (!isVisible) return null;
 
   return (x.draggable &&
     mapaContext.elementosFoco &&
@@ -151,24 +203,24 @@ const ImageOverlayRotated = (props: Props) => {
         position={x.positionTL}
         draggable={x.draggable}
         eventHandlers={{
-          move: (e: any) => reposition("positionTL", e),
-          moveend: () => dispatchReposition("positionTL"),
+          move: (e: any) => reposition('positionTL', e),
+          moveend: () => dispatchReposition('positionTL'),
         }}
       />
       <Marker
         position={x.positionTR}
         draggable={x.draggable}
         eventHandlers={{
-          move: (e: any) => reposition("positionTR", e),
-          moveend: () => dispatchReposition("positionTR"),
+          move: (e: any) => reposition('positionTR', e),
+          moveend: () => dispatchReposition('positionTR'),
         }}
       />
       <Marker
         position={x.positionBL}
         draggable={x.draggable}
         eventHandlers={{
-          move: (e: any) => reposition("positionBL", e),
-          moveend: () => dispatchReposition("positionBL"),
+          move: (e: any) => reposition('positionBL', e),
+          moveend: () => dispatchReposition('positionBL'),
         }}
       />
       <Marker
@@ -181,20 +233,6 @@ const ImageOverlayRotated = (props: Props) => {
       />
     </>
   ) : null;
-  //(
-  // <ImageOverlay
-  //   {...x}
-  //   ref={(e) => {
-  //     imageRef.current = e;
-  //   }}
-  //   className={x.draggable ? "image-overlay-subjx " + x.id : ""}
-  //   url={x.urlImagem}
-  //   key={`ImageOverlay#${i}`}
-  //   eventHandlers={{
-  //     click: (e) => cliqueElementoNoMapa(x, e),
-  //   }}
-  // />
-  // );
 };
 
 export default ImageOverlayRotated;

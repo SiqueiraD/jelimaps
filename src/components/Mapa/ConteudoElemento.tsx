@@ -1,17 +1,17 @@
-import { useEffect } from "react";
-import { elementoPadrao } from "./mapaContextTypes";
-import Leaflet from "leaflet";
-import { useMap } from "react-leaflet";
-import { GeoJSONStoreFeatures, TerraDraw } from "terra-draw";
-import { useMapaContext, useMapaDispatch } from "./MapaContext";
-import MapaContextChanger from "./ContextChangers";
-import { elementos } from "@/main/constants/elementos";
-import { montarDispatchSelecionarElemento } from "./MapaUtils/selecionarElementoHelper";
+import { elementos } from '@/main/constants/elementos';
+import Leaflet from 'leaflet';
+import { useEffect } from 'react';
+import { useMap } from 'react-leaflet';
+import { GeoJSONStoreFeatures, TerraDraw } from 'terra-draw';
+import MapaContextChanger from './ContextChangers';
+import { useMapaContext, useMapaDispatch } from './MapaContext';
+import { elementoPadrao } from './mapaContextTypes';
 import {
   contarPontosCoordenadas,
-  isPoligonoGrande,
   getTooltipPoligonoGrande,
-} from "./MapaUtils/contarPontosHelper";
+  isPoligonoGrande,
+} from './MapaUtils/contarPontosHelper';
+import { montarDispatchSelecionarElemento } from './MapaUtils/selecionarElementoHelper';
 
 const ConteudoElemento = (propsConteudoElemento: {
   elemento: elementoPadrao;
@@ -23,8 +23,8 @@ const ConteudoElemento = (propsConteudoElemento: {
 
   const corItemSelecionadoFoco = (elemento) => {
     return MapaContextChanger.isElementoSelecionado(mapaContext, elemento.id)
-      ? "#000000"
-      : elemento.color ?? "#0d6efd";
+      ? '#000000'
+      : elemento.color ?? '#0d6efd';
   };
 
   const functionRemoveDraw = () => {
@@ -97,7 +97,7 @@ const ConteudoElemento = (propsConteudoElemento: {
 
     function insereElementoSemDraw() {
       if (propsConteudoElemento.draw)
-        elementoGeoJSON.on("click", () => {
+        elementoGeoJSON.on('click', () => {
           // Verificar se é um polígono grande antes de processar o clique
           const elemento = propsConteudoElemento.elemento;
 
@@ -134,7 +134,7 @@ const ConteudoElemento = (propsConteudoElemento: {
       if (propsConteudoElemento.draw) {
         // Verificar se é um polígono com muitos pontos
         const shouldSkipDraw = isPoligonoGrande(propsConteudoElemento.elemento);
-        
+
         if (
           propsConteudoElemento.elemento.draggable &&
           MapaContextChanger.isElementoSelecionado(
@@ -158,14 +158,14 @@ const ConteudoElemento = (propsConteudoElemento: {
             } else {
               (propsConteudoElemento.draw as any).setMode(elementos.Hand.nome);
               dispatch({
-                type: "selecionarElementoInteracao",
+                type: 'selecionarElementoInteracao',
                 arg: elementos.Hand,
               });
               selecionarElementoPeloDraw();
             }
           } catch (error) {
             dispatch({
-              type: "removeElements",
+              type: 'removeElements',
               id: propsConteudoElemento.elemento.id,
             });
           }

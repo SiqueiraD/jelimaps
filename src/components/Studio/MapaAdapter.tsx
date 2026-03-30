@@ -1,11 +1,8 @@
-import { MapContainer, ImageOverlay } from "react-leaflet";
-import Leaflet, { LatLngBounds, LatLng, Map } from "leaflet";
-import { useEffect, useMemo, useRef, useState } from "react";
-import React from "react";
 import CustomControlLeaflet, {
   POSITION_CLASSES_CUSTOM_CONTROL,
-} from "@/components/CustomControlLeaflet/CustomControlLeaflet";
-import { useMapaContext, useMapaDispatch } from "@/components/Mapa/MapaContext";
+} from '@/components/CustomControlLeaflet/CustomControlLeaflet';
+import { useMapaContext, useMapaDispatch } from '@/components/Mapa/MapaContext';
+import { usePresignedUrl } from '@/hooks/usePresignedUrl';
 import {
   Button,
   DialogActions,
@@ -13,24 +10,33 @@ import {
   DialogTitle,
   Fab,
   Grid2,
-  TextField,
-} from "@mui/material";
+} from '@mui/material';
+import Leaflet, { LatLng, LatLngBounds, Map } from 'leaflet';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ImageOverlay, MapContainer } from 'react-leaflet';
 // import Elementos from "./Elementos";
-import { PlaylistPlay, KeyboardDoubleArrowUp } from "@mui/icons-material";
-import useCaixaDialogo from "../CaixaDialogo/useCaixaDialogo";
-import ImageResolver from "@/components/ImageUrlResolver";
-import { MODO_VISAO, tipoElemento } from "../Mapa/mapaContextTypes";
-import { TerraDraw } from "terra-draw";
-import MapaContextChanger from "../Mapa/ContextChangers";
-import UndoControl from "./UndoControl";
-import { getImageDimensions } from "../Mapa/MapaUtils";
-import PlanoFundoMapaComum from "../Mapa/PlanoFundoMapaComum/PlanoFundoMapaComum";
-import { elementos } from "@/main/constants/elementos";
-import ConteudoMapa from "../Mapa/ConteudoMapa";
-import useWindowDimensions from "./useWindowDimensions";
-import SliderLinhaTempo from "../Mapa/SliderLinhaTempo";
-import SearchLocationControl from "../SearchBox/SearchLocationControl";
-import Image from "next/image";
+import ImageUploadField from '@/components/Atomic/ImageUploadField';
+import ImageResolver from '@/components/ImageUrlResolver';
+import { elementos } from '@/main/constants/elementos';
+import { KeyboardDoubleArrowUp, PlaylistPlay } from '@mui/icons-material';
+import { TerraDraw } from 'terra-draw';
+import useCaixaDialogo from '../CaixaDialogo/useCaixaDialogo';
+import ConteudoMapa from '../Mapa/ConteudoMapa';
+import MapaContextChanger from '../Mapa/ContextChangers';
+import { MODO_VISAO, tipoElemento } from '../Mapa/mapaContextTypes';
+import { getImageDimensions } from '../Mapa/MapaUtils';
+import PlanoFundoMapaComum from '../Mapa/PlanoFundoMapaComum/PlanoFundoMapaComum';
+import SliderLinhaTempo from '../Mapa/SliderLinhaTempo';
+import SearchLocationControl from '../SearchBox/SearchLocationControl';
+import UndoControl from './UndoControl';
+import useWindowDimensions from './useWindowDimensions';
+
+delete (Leaflet.Icon.Default.prototype as any)._getIconUrl;
+Leaflet.Icon.Default.mergeOptions({
+  iconUrl: '/marker-icon.png',
+  iconRetinaUrl: '/marker-icon-2x.png',
+  shadowUrl: '/marker-shadow.png',
+});
 
 export default function Mapa(propsMapa: {
   altura: number;
@@ -56,14 +62,14 @@ export default function Mapa(propsMapa: {
   const moveStartedRef = useRef<boolean>(false);
   useEffect(() => {
     if (map && !isMounted) {
-      map.on("moveend", () => {
+      map.on('moveend', () => {
         if (!moveStartedRef.current)
           setTimeout(() => {
             if (
               !mapaContext.center ||
               map.distance(mapaContext.center, map.getCenter()) > 1
             ) {
-              dispatch({ type: "alteraPropriedadesMapa", map: map });
+              dispatch({ type: 'alteraPropriedadesMapa', map: map });
             }
           }, 100);
         else moveStartedRef.current = false;
@@ -86,14 +92,18 @@ export default function Mapa(propsMapa: {
     }
   }, [mapaContext.modoVisao, map, center, zoom]);
 
+  const [resolvedUrlMapaProprio] = usePresignedUrl(
+    mapaContext.urlMapaProprio,
+    mapaContext.id
+  );
   const urlImageRef = useRef<string>();
   const { openModalConfirm, closeModalConfirm, onConfirm } = useCaixaDialogo();
 
   //TODO: Função undo não pode reabrir popup de inserção de elemento????
   const handleDispatchInserirImageOverlay = React.useCallback(async () => {
     dispatch({
-      type: "adicionarImageOverlay",
-      tipo: "ImageOverlay",
+      type: 'adicionarImageOverlay',
+      tipo: 'ImageOverlay',
       valor: await ImageResolver.UrlResolver(urlImageRef.current),
     });
     propsMapa.draw.setMode(elementos.Hand.nome);
@@ -101,15 +111,13 @@ export default function Mapa(propsMapa: {
     caixaDialogoRef.current = urlImageRef.current = null;
   }, [dispatch, closeModalConfirm, propsMapa.draw]);
 
-  const handleInserirImagem = React.useCallback(async () => {
-    const isImagemValida = await ImageResolver.isValidUrl(urlImageRef.current);
-    const urlImagem = await ImageResolver.UrlResolver(urlImageRef.current);
+  const handleInserirImagem = React.useCallback(() => {
     openModalConfirm({
-      title: "",
+      title: '',
       onClosed: () => {
         caixaDialogoRef.current = null;
       },
-      message: "",
+      message: '',
       onConfirm,
       cancelarNotVisible: true,
       confirmarNotVisible: true,
@@ -119,37 +127,18 @@ export default function Mapa(propsMapa: {
             Por favor, insira a url da imagem do seu mapa!
           </DialogTitle>
           <DialogContent dividers>
-            <TextField
-              id="outlined-controlled"
-              label="Link da Imagem"
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                urlImageRef.current = event.target.value;
+            <ImageUploadField
+              defaultValue={urlImageRef.current ?? ''}
+              onChange={(url) => {
+                urlImageRef.current = url;
               }}
+              mapaId={mapaContext.id}
+              previewWidth={Math.round(width * 0.21)}
+              previewHeight={Math.round(height * 0.21)}
             />
-            {urlImageRef.current &&
-            urlImageRef.current !== "" &&
-            isImagemValida ? (
-              <Image
-                alt={`Imagem carregada pelo link: ${urlImagem}`}
-                src={urlImagem}
-                width={width * 0.21}
-                height={height * 0.21}
-                placeholder="blur"
-                blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
-              />
-            ) : (
-              <div> Copie um link válido</div>
-            )}
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleInserirImagem}>Atualizar</Button>
-            {urlImageRef.current &&
-              urlImageRef.current !== "" &&
-              isImagemValida && (
-                <Button onClick={handleDispatchInserirImageOverlay}>
-                  Salvar
-                </Button>
-              )}
+            <Button onClick={handleDispatchInserirImageOverlay}>Salvar</Button>
           </DialogActions>
         </div>
       ),
@@ -159,6 +148,7 @@ export default function Mapa(propsMapa: {
     onConfirm,
     width,
     height,
+    mapaContext.id,
     handleDispatchInserirImageOverlay,
   ]);
 
@@ -175,21 +165,21 @@ export default function Mapa(propsMapa: {
     if (
       mapaContext.caixaDialogo &&
       mapaContext.caixaDialogo !== caixaDialogoRef.current &&
-      mapaContext.caixaDialogo !== ""
+      mapaContext.caixaDialogo !== ''
     ) {
       caixaDialogoRef.current = mapaContext.caixaDialogo;
       dispatch({
-        type: "limpaCaixaDialogo",
+        type: 'limpaCaixaDialogo',
       });
       handleInserirImagem();
     }
 
     if (map) map.setMaxZoom(mapaContext.tipoMapaComum?.maxZoom ?? 23);
-    console.log("mapaContext", mapaContext);
+    console.log('mapaContext', mapaContext);
     conteudoElementosRef.current =
       MapaContextChanger.retornaListaElementosConteudoCenaAtual(mapaContext);
   });
-  if (propsMapa.draw && (propsMapa.draw as any)._mode?._state == "selecting") {
+  if (propsMapa.draw && (propsMapa.draw as any)._mode?._state == 'selecting') {
     propsMapa.draw.clear();
   }
 
@@ -197,8 +187,11 @@ export default function Mapa(propsMapa: {
     new LatLngBounds([0, 0], [1, 1.5])
   );
   useEffect(() => {
-    if (mapaContext.modoVisao === MODO_VISAO.mapaProprio)
-      getImageDimensions(mapaContext.urlMapaProprio).then((dimensions) =>
+    if (
+      mapaContext.modoVisao === MODO_VISAO.mapaProprio &&
+      resolvedUrlMapaProprio
+    )
+      getImageDimensions(resolvedUrlMapaProprio).then((dimensions) =>
         setBounds(
           new LatLngBounds(
             [0, 0],
@@ -206,15 +199,15 @@ export default function Mapa(propsMapa: {
           )
         )
       );
-  }, [mapaContext.modoVisao, mapaContext.urlMapaProprio]);
+  }, [mapaContext.modoVisao, resolvedUrlMapaProprio]);
 
   return (
-    <Grid2 size={"grow"} id={"idMapa"}>
+    <Grid2 size={'grow'} id={'idMapa'}>
       <div
         style={{
           height: propsMapa.altura,
           width: propsMapa.largura,
-          display: "grid",
+          display: 'grid',
         }}
       >
         <MapContainer
@@ -227,10 +220,15 @@ export default function Mapa(propsMapa: {
           {mapaContext.modoVisao === MODO_VISAO.openstreetmap && (
             <PlanoFundoMapaComum />
           )}
-          {mapaContext.modoVisao === MODO_VISAO.mapaProprio && (
-            <ImageOverlay bounds={bounds} url={mapaContext.urlMapaProprio} />
+          {mapaContext.modoVisao === MODO_VISAO.mapaProprio &&
+            resolvedUrlMapaProprio && (
+              <ImageOverlay bounds={bounds} url={resolvedUrlMapaProprio} />
+            )}
+          {(mapaContext.modoVisao === MODO_VISAO.openstreetmap ||
+            (mapaContext.modoVisao === MODO_VISAO.mapaProprio &&
+              resolvedUrlMapaProprio)) && (
+            <ConteudoMapa draw={propsMapa.draw} />
           )}
-          <ConteudoMapa draw={propsMapa.draw} />
           {/* <CustomControlLeaflet
             position={POSITION_CLASSES_CUSTOM_CONTROL.bottomright}
           >
@@ -243,7 +241,7 @@ export default function Mapa(propsMapa: {
                 // Verifica se é MultiPolygon para adicionar cada polígono separadamente
                 if (
                   location.geojson &&
-                  location.geojson.type === "MultiPolygon"
+                  location.geojson.type === 'MultiPolygon'
                 ) {
                   // Itera sobre cada polígono do MultiPolygon
                   const multiPolygonCoords = location.geojson
@@ -251,18 +249,18 @@ export default function Mapa(propsMapa: {
                   multiPolygonCoords.forEach(
                     (polygonCoords: any, index: number) => {
                       dispatch({
-                        type: "addElemento",
+                        type: 'addElemento',
                         textoElemento: location.display_name,
                         nomeElemento:
                           (location as any).name ?? location.display_name,
                         posicao: polygonCoords as any,
-                        tipo: "Polygon",
+                        tipo: 'Polygon',
                         valor: {
                           ...location,
                           properties: {
-                            mode: "polygon",
+                            mode: 'polygon',
                             name: `${
-                              location.display_name.split(",")[0]
+                              location.display_name.split(',')[0]
                             } - Parte ${index + 1}`,
                           },
                         },
@@ -270,8 +268,8 @@ export default function Mapa(propsMapa: {
                     }
                   );
                 } else if (location.geojson) {
-                  if (location.geojson.type === "Point") {
-                    location.geojson.type = "Marker";
+                  if (location.geojson.type === 'Point') {
+                    location.geojson.type = 'Marker';
                     location.geojson.coordinates = [
                       (location.geojson.coordinates as any)[1],
                       (location.geojson.coordinates as any)[0],
@@ -280,7 +278,7 @@ export default function Mapa(propsMapa: {
 
                   // Para outros tipos (Polygon, Point, LineString), adiciona normalmente
                   dispatch({
-                    type: "addElemento",
+                    type: 'addElemento',
                     posicao: location.geojson.coordinates as any,
                     tipo: location.geojson.type,
                     textoElemento: location.display_name,
@@ -292,12 +290,12 @@ export default function Mapa(propsMapa: {
                     },
                   });
                 }
-                console.log("Localização encontrada:", location);
+                console.log('Localização encontrada:', location);
               }}
             />
           )}
           <CustomControlLeaflet
-            classCustom={"leaflet-control custom-control-undo"}
+            classCustom={'leaflet-control custom-control-undo'}
           >
             <UndoControl />
           </CustomControlLeaflet>
@@ -306,13 +304,13 @@ export default function Mapa(propsMapa: {
           >
             <Fab
               color="primary"
-              onClick={() => dispatch({ type: "slideToogle" })}
+              onClick={() => dispatch({ type: 'slideToogle' })}
               sx={{ zIndex: 100000 }}
               id="botaoTR"
             >
               <PlaylistPlay
                 sx={{
-                  transform: !mapaContext.slidePropriedade ? "scaleX(-1)" : "",
+                  transform: !mapaContext.slidePropriedade ? 'scaleX(-1)' : '',
                 }}
               />
             </Fab>
@@ -324,8 +322,8 @@ export default function Mapa(propsMapa: {
               color="primary"
               onClick={() =>
                 dispatch({
-                  type: "slideToogle",
-                  nomePropriedade: "slideLinhaTempo",
+                  type: 'slideToogle',
+                  nomePropriedade: 'slideLinhaTempo',
                   valorPropriedade: !mapaContext.slideLinhaTempo,
                 })
               }
@@ -333,7 +331,7 @@ export default function Mapa(propsMapa: {
             >
               <KeyboardDoubleArrowUp
                 sx={{
-                  transform: !mapaContext.slideLinhaTempo ? "" : "scaleY(-1)",
+                  transform: !mapaContext.slideLinhaTempo ? '' : 'scaleY(-1)',
                 }}
               />
             </Fab>
@@ -343,7 +341,7 @@ export default function Mapa(propsMapa: {
             <CustomControlLeaflet
               position={POSITION_CLASSES_CUSTOM_CONTROL.bottomleft}
               classCustom={
-                "leaflet-control leaflet-bar leaflet-speeddial leaflet-speeddial-full-width"
+                'leaflet-control leaflet-bar leaflet-speeddial leaflet-speeddial-full-width'
               }
             >
               <SliderLinhaTempo />

@@ -103,6 +103,14 @@ const ResponsiveAppBar: React.FC = () => {
                 {page.text}
               </Button>
             ))}
+            {session && (
+              <Button
+                onClick={() => handleRouter("/mapa/meus-mapas")}
+                sx={{ my: 2, color: 'white', display: 'block' }}
+              >
+                Meus Mapas
+              </Button>
+            )}
           </Box>
 
           <Box sx={{ flexGrow: 0, ml: 2 }}>
@@ -141,7 +149,10 @@ const ResponsiveAppBar: React.FC = () => {
                       open={Boolean(anchorElUser)}
                       onClose={handleCloseUserMenu}
                     >
-                      <MenuItem onClick={() => handleRouter("/perfil")}>
+                      <MenuItem onClick={() => { handleRouter("/mapa/meus-mapas"); setAnchorElUser(null); }}>
+                        <Typography textAlign="center">Meus Mapas</Typography>
+                      </MenuItem>
+                      <MenuItem onClick={() => { handleRouter("/perfil"); setAnchorElUser(null); }}>
                         <Typography textAlign="center">Perfil</Typography>
                       </MenuItem>
                       <MenuItem onClick={handleSignOut}>
@@ -202,6 +213,11 @@ const ResponsiveAppBar: React.FC = () => {
                   <Typography textAlign="center">{page.text}</Typography>
                 </MenuItem>
               ))}
+              {session && (
+                <MenuItem onClick={() => handleRouter("/mapa/meus-mapas")}>
+                  <Typography textAlign="center">Meus Mapas</Typography>
+                </MenuItem>
+              )}
             </Menu>
           </Box>
           <Public sx={{ display: { xs: "flex", md: "none" }, mr: 1 }} />

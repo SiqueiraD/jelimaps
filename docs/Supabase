@@ -28,6 +28,9 @@ CREATE TABLE IF NOT EXISTS usuarios (
 );
 
 -- 3.2 MAPAS
+-- publico = TRUE  → mapa "publicado": qualquer usuário pode acessar via /mapa/[id]
+--                   usuários logados são auto-registrados em usuarios_mapas com permissão 'view'
+-- publico = FALSE → mapa privado: somente dono e usuários em usuarios_mapas têm acesso
 CREATE TABLE IF NOT EXISTS mapas (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   dono_id UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
@@ -52,12 +55,14 @@ CREATE TABLE IF NOT EXISTS usuarios_mapas (
 CREATE INDEX IF NOT EXISTS idx_usuarios_mapas_usuario_id ON usuarios_mapas(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_usuarios_mapas_mapa_id ON usuarios_mapas(mapa_id);
 
--- 3.4 IMAGENS (próxima funcionalidade)
+-- 3.4 IMAGENS (armazenadas no Cloudflare R2)
 CREATE TABLE IF NOT EXISTS imagens (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   mapa_id UUID NOT NULL REFERENCES mapas(id) ON DELETE CASCADE,
   nome TEXT,
-  binario BYTEA NOT NULL,
+  caminho TEXT NOT NULL,
+  tamanho BIGINT NOT NULL,
+  caminho_miniatura TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

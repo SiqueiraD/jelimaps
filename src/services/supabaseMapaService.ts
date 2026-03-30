@@ -1,6 +1,8 @@
-import { Session } from 'next-auth';
-import { getSupabaseAdmin } from '@/lib/supabase';
 import { mapaContextSchema } from '@/components/Mapa/mapaContextTypes';
+import { getR2Client } from '@/lib/r2';
+import { getSupabaseAdmin } from '@/lib/supabase';
+import { DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { Session } from 'next-auth';
 
 export type MapaResumo = {
   id: string;
@@ -47,11 +49,14 @@ export async function listarMeusMapas(session: Session): Promise<MapaResumo[]> {
       .select('id, titulo, publico, created_at, updated_at, dono_id')
       .in('id', ids);
 
-    if (e3) throw new Error(`Erro ao carregar mapas compartilhados: ${e3.message}`);
+    if (e3)
+      throw new Error(`Erro ao carregar mapas compartilhados: ${e3.message}`);
 
     sharedMaps = (maps ?? []).map((m) => ({
       ...m,
-      permissao: sharedLinks.find((l) => l.mapa_id === m.id)?.permissao as 'view' | 'edit',
+      permissao: sharedLinks.find((l) => l.mapa_id === m.id)?.permissao as
+        | 'view'
+        | 'edit',
     }));
   }
 
@@ -61,7 +66,8 @@ export async function listarMeusMapas(session: Session): Promise<MapaResumo[]> {
   ];
 
   return all.sort(
-    (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    (a, b) =>
+      new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
   );
 }
 
@@ -93,12 +99,13 @@ export async function carregarMapa(
     data.publico ||
     data.dono_id === userId ||
     (userId
-      ? (await supabase
-          .from('usuarios_mapas')
-          .select('permissao')
-          .eq('mapa_id', mapaId)
-          .eq('usuario_id', userId)
-          .maybeSingle()
+      ? (
+          await supabase
+            .from('usuarios_mapas')
+            .select('permissao')
+            .eq('mapa_id', mapaId)
+            .eq('usuario_id', userId)
+            .maybeSingle()
         ).data !== null
       : false);
 
@@ -135,45 +142,146 @@ export async function criarMapa(
 export async function atualizarMapa(
   session: Session,
   mapaId: string,
-  campos: Partial<{ titulo: string; informacoes: mapaContextSchema; publico: boolean }>
+  campos: Partial<{
+    titulo: string;
+    informacoes: mapaContextSchema;
+    publico: boolean;
+  }>
 ): Promise<void> {
   const supabase = getSupabaseAdmin();
   const userId = session.userId!;
 
   const { data: mapa } = await supabase
-    .from('mapas').select('dono_id').eq('id', mapaId).single();
+    .from('mapas')
+    .select('dono_id')
+    .eq('id', mapaId)
+    .single();
   if (!mapa) throw new Error('Mapa não encontrado');
 
   if (mapa.dono_id !== userId) {
     const { data: perm } = await supabase
-      .from('usuarios_mapas').select('permissao')
-      .eq('mapa_id', mapaId).eq('usuario_id', userId).eq('permissao', 'edit').maybeSingle();
+      .from('usuarios_mapas')
+      .select('permissao')
+      .eq('mapa_id', mapaId)
+      .eq('usuario_id', userId)
+      .eq('permissao', 'edit')
+      .maybeSingle();
     if (!perm) throw new Error('Sem permissão para editar este mapa');
   }
 
-  const { error } = await supabase.from('mapas').update(campos).eq('id', mapaId);
+  const { error } = await supabase
+    .from('mapas')
+    .update(campos)
+    .eq('id', mapaId);
   if (error) throw new Error(`Erro ao atualizar mapa: ${error.message}`);
 }
 
 /**
- * Remove um mapa. RLS permite apenas o dono.
+ * Registra automaticamente um usuário logado como visualizador de um mapa público,
+ * se ainda não tiver nenhum acesso registrado.
  */
-export async function deletarMapa(session: Session, mapaId: string): Promise<void> {
+export async function autoRegistrarVisualizador(
+  userId: string,
+  mapaId: string
+): Promise<void> {
   const supabase = getSupabaseAdmin();
-  const { error } = await supabase.from('mapas').delete().eq('id', mapaId).eq('dono_id', session.userId!);
+
+  const { data: existing } = await supabase
+    .from('usuarios_mapas')
+    .select('permissao')
+    .eq('usuario_id', userId)
+    .eq('mapa_id', mapaId)
+    .maybeSingle();
+
+  if (existing) return;
+
+  await supabase.from('usuarios_mapas').insert({
+    usuario_id: userId,
+    mapa_id: mapaId,
+    permissao: 'view',
+  });
+}
+
+/**
+ * Remove um mapa. RLS permite apenas o dono.
+ * Deleta primeiro todas as imagens do R2 associadas ao mapa.
+ */
+export async function deletarMapa(
+  session: Session,
+  mapaId: string
+): Promise<void> {
+  const supabase = getSupabaseAdmin();
+
+  const { data: mapa } = await supabase
+    .from('mapas')
+    .select('dono_id')
+    .eq('id', mapaId)
+    .single();
+
+  if (!mapa) throw new Error('Mapa não encontrado');
+  if (mapa.dono_id !== session.userId!)
+    throw new Error('Sem permissão: apenas o dono pode deletar o mapa');
+
+  const { data: imagens } = await supabase
+    .from('imagens')
+    .select('caminho')
+    .eq('mapa_id', mapaId);
+
+  if (imagens && imagens.length > 0) {
+    await Promise.allSettled(
+      imagens.map((img) =>
+        getR2Client().send(
+          new DeleteObjectCommand({
+            Bucket: process.env.R2_BUCKET_NAME,
+            Key: img.caminho,
+          })
+        )
+      )
+    );
+    await supabase.from('imagens').delete().eq('mapa_id', mapaId);
+  }
+
+  const { error } = await supabase.from('mapas').delete().eq('id', mapaId);
   if (error) throw new Error(`Erro ao deletar mapa: ${error.message}`);
 }
 
 /**
- * Lista compartilhamentos de um mapa. RLS permite ver apenas dono ou editores.
+ * Busca o userId de um usuário pelo e-mail (via tabela usuarios).
+ */
+export async function buscarUsuarioPorEmail(
+  email: string
+): Promise<string | null> {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from('usuarios')
+    .select('id')
+    .eq('email', email.toLowerCase())
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data.id;
+}
+
+/**
+ * Lista compartilhamentos de um mapa. RLS permite ver apenas o dono.
  */
 export async function listarCompartilhamentos(
   session: Session,
   mapaId: string
-): Promise<{ usuario_id: string; permissao: 'view' | 'edit'; created_at: string }[]> {
+): Promise<
+  {
+    usuario_id: string;
+    email?: string;
+    permissao: 'view' | 'edit';
+    created_at: string;
+  }[]
+> {
   const supabase = getSupabaseAdmin();
   const { data: mapa } = await supabase
-    .from('mapas').select('dono_id').eq('id', mapaId).single();
+    .from('mapas')
+    .select('dono_id')
+    .eq('id', mapaId)
+    .single();
   if (mapa?.dono_id !== session.userId)
     throw new Error('Sem permissão para ver compartilhamentos deste mapa');
 
@@ -182,12 +290,25 @@ export async function listarCompartilhamentos(
     .select('usuario_id, permissao, created_at')
     .eq('mapa_id', mapaId);
 
-  if (error) throw new Error(`Erro ao listar compartilhamentos: ${error.message}`);
-  return data ?? [];
+  if (error)
+    throw new Error(`Erro ao listar compartilhamentos: ${error.message}`);
+  if (!data || data.length === 0) return [];
+
+  const userIds = data.map((d) => d.usuario_id);
+  const { data: usuarios } = await supabase
+    .from('usuarios')
+    .select('id, email')
+    .in('id', userIds);
+
+  const emailMap = new Map<string, string | undefined>(
+    (usuarios ?? []).map((u) => [u.id, u.email] as [string, string | undefined])
+  );
+
+  return data.map((d) => ({ ...d, email: emailMap.get(d.usuario_id) }));
 }
 
 /**
- * Adiciona ou atualiza um compartilhamento. RLS permite apenas o dono.
+ * Adiciona ou atualiza um compartilhamento. Apenas o dono do mapa pode compartilhar.
  */
 export async function compartilharMapa(
   session: Session,
@@ -196,6 +317,17 @@ export async function compartilharMapa(
   permissao: 'view' | 'edit'
 ): Promise<void> {
   const supabase = getSupabaseAdmin();
+
+  const { data: mapa } = await supabase
+    .from('mapas')
+    .select('dono_id')
+    .eq('id', mapaId)
+    .single();
+
+  if (!mapa) throw new Error('Mapa não encontrado');
+  if (mapa.dono_id !== session.userId)
+    throw new Error('Sem permissão: apenas o dono pode compartilhar o mapa');
+
   const { error } = await supabase
     .from('usuarios_mapas')
     .upsert({ mapa_id: mapaId, usuario_id: usuarioId, permissao });
@@ -212,11 +344,25 @@ export async function removerCompartilhamento(
   usuarioId: string
 ): Promise<void> {
   const supabase = getSupabaseAdmin();
+
+  const { data: mapa } = await supabase
+    .from('mapas')
+    .select('dono_id')
+    .eq('id', mapaId)
+    .single();
+
+  if (!mapa) throw new Error('Mapa não encontrado');
+  if (mapa.dono_id !== session.userId)
+    throw new Error(
+      'Sem permissão: apenas o dono pode remover compartilhamentos'
+    );
+
   const { error } = await supabase
     .from('usuarios_mapas')
     .delete()
     .eq('mapa_id', mapaId)
     .eq('usuario_id', usuarioId);
 
-  if (error) throw new Error(`Erro ao remover compartilhamento: ${error.message}`);
+  if (error)
+    throw new Error(`Erro ao remover compartilhamento: ${error.message}`);
 }

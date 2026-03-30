@@ -33,6 +33,7 @@ import MapaContextChanger from "@/components/Mapa/ContextChangers";
 import useCaixaDialogo from "@/components/CaixaDialogo/useCaixaDialogo";
 import Leaflet, { Map } from "leaflet";
 import ImageResolver from "@/components/ImageUrlResolver";
+import ImageUploadField from "@/components/Atomic/ImageUploadField";
 import Button from "@/components/Atomic/Button";
 import contextChangers from "@/components/Mapa/ContextChangers";
 import useWindowDimensions from "../useWindowDimensions";
@@ -90,9 +91,7 @@ export default function Elemento(props: { map: Map }) {
     closeModalConfirm(null, null);
   }, [dispatch, closeModalConfirm]);
 
-  const handleInserirImagem = React.useCallback(async () => {
-    const isImagemValida = await ImageResolver.isValidUrl(urlImageRef.current);
-    const urlImagem = await ImageResolver.UrlResolver(urlImageRef.current);
+  const handleInserirImagem = React.useCallback(() => {
     openModalConfirm({
       title: "",
       message: "",
@@ -103,48 +102,21 @@ export default function Elemento(props: { map: Map }) {
         <div>
           <DialogTitle>Por favor, insira a url da imagem</DialogTitle>
           <DialogContent dividers>
-            <TextField
-              id="outlined-controlled"
-              label="Link da Imagem"
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                urlImageRef.current = event.target.value;
-              }}
+            <ImageUploadField
+              defaultValue={urlImageRef.current ?? ""}
+              onChange={(url) => { urlImageRef.current = url; }}
+              mapaId={mapaContext.id}
+              previewWidth={Math.round(width * 0.21)}
+              previewHeight={Math.round(height * 0.21)}
             />
-            {urlImageRef.current &&
-            urlImageRef.current !== "" &&
-            isImagemValida ? (
-              <Image
-                alt={`Imagem carregada pelo link: ${urlImagem}`}
-                src={urlImagem}
-                width={width * 0.21}
-                height={height * 0.21}
-                placeholder="blur"
-                blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
-              />
-            ) : (
-              <div> Copie um link válido</div>
-            )}
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleInserirImagem}>Atualizar</Button>
-            {urlImageRef.current &&
-              urlImageRef.current !== "" &&
-              isImagemValida && (
-                <Button onClick={handleDispatchInserirImageOverlay}>
-                  Salvar
-                </Button>
-              )}
+            <Button onClick={handleDispatchInserirImageOverlay}>Salvar</Button>
           </DialogActions>
         </div>
       ),
     });
-  }, [
-    openModalConfirm,
-    onConfirm,
-    width,
-    height,
-    handleDispatchInserirImageOverlay,
-  ]);
+  }, [openModalConfirm, onConfirm, width, height, mapaContext.id, handleDispatchInserirImageOverlay]);
   return (
     <List sx={{ height: "100%", pt: 0 }} key={"lista"}>
       {carregaElementosFoco() &&

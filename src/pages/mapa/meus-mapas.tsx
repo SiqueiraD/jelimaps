@@ -17,6 +17,7 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import PublicIcon from "@mui/icons-material/Public";
 import LockIcon from "@mui/icons-material/Lock";
 import AddIcon from "@mui/icons-material/Add";
@@ -189,10 +190,10 @@ export default function MeusMapas() {
                       <Button
                         size="small"
                         variant="contained"
-                        startIcon={<EditIcon />}
-                        onClick={() => router.push(`/mapa/visualizacao?id=${mapa.id}`)}
+                        startIcon={mapa.permissao === "view" ? <VisibilityIcon /> : <EditIcon />}
+                        onClick={() => router.push(`/mapa/${mapa.id}`)}
                       >
-                        Abrir
+                        {mapa.permissao === "view" ? "Visualizar" : "Abrir"}
                       </Button>
                       {mapa.permissao === "dono" && (
                         <Tooltip title="Excluir mapa">

@@ -1,17 +1,17 @@
-import React from "react";
-import { TerraDrawLeafletAdapter } from 'terra-draw-leaflet-adapter';
+import { elementos } from '@/main/constants/elementos';
+import Leaflet from 'leaflet';
+import React from 'react';
 import {
   TerraDraw,
-  TerraDrawSelectMode,
-  TerraDrawPolygonMode,
-  TerraDrawPointMode,
-  TerraDrawLineStringMode,
   TerraDrawCircleMode,
+  TerraDrawLineStringMode,
+  TerraDrawPointMode,
+  TerraDrawPolygonMode,
   TerraDrawRenderMode,
-} from "terra-draw";
-import { actionContextChange, tipoElemento } from "../Mapa/mapaContextTypes";
-import Leaflet from "leaflet";
-import { elementos } from "@/main/constants/elementos";
+  TerraDrawSelectMode,
+} from 'terra-draw';
+import { TerraDrawLeafletAdapter } from 'terra-draw-leaflet-adapter';
+import { actionContextChange, tipoElemento } from '../Mapa/mapaContextTypes';
 
 const terraDrawSetup = (
   dispatch: React.Dispatch<actionContextChange>,
@@ -24,11 +24,11 @@ const terraDrawSetup = (
   const terraDrawPointMode = new TerraDrawPointMode({});
   const terraDrawCircleMode = new TerraDrawCircleMode({});
   const terraDrawMarkerMode = new TerraDrawRenderMode({
-    modeName: "marker",
+    modeName: 'marker',
     styles: {},
   });
   const terraDrawImageOverlayMode = new TerraDrawRenderMode({
-    modeName: "ImageOverlay",
+    modeName: 'ImageOverlay',
     styles: {},
   });
   const terraDrawLineStringMode = new TerraDrawLineStringMode({});
@@ -63,23 +63,23 @@ const terraDrawSetup = (
       },
     },
     styles: {
-      selectedPolygonColor: "#222222", // Any hex color you like
+      selectedPolygonColor: '#222222', // Any hex color you like
       selectedPolygonFillOpacity: 0.7, // 0 - 1
-      selectedPolygonOutlineColor: "#333333", // Any hex color you like
+      selectedPolygonOutlineColor: '#333333', // Any hex color you like
       selectedPolygonOutlineWidth: 3, // Integer
       selectionPointWidth: 3,
-      selectionPointColor: "#000000",
-      selectionPointOutlineColor: "#000000",
+      selectionPointColor: '#000000',
+      selectionPointOutlineColor: '#000000',
       selectionPointOutlineWidth: 3,
-      midPointColor: "#000000",
-      midPointOutlineColor: "#000000",
+      midPointColor: '#000000',
+      midPointOutlineColor: '#000000',
       midPointWidth: 2,
       midPointOutlineWidth: 2,
-      selectedPointColor: "#000000",
+      selectedPointColor: '#000000',
       selectedPointWidth: 2,
-      selectedPointOutlineColor: "#000000",
+      selectedPointOutlineColor: '#000000',
       selectedPointOutlineWidth: 2,
-      selectedLineStringColor: "#000000",
+      selectedLineStringColor: '#000000',
       selectedLineStringWidth: 3,
     },
   });
@@ -96,8 +96,8 @@ const terraDrawSetup = (
       };
     });
   })([
-    { origin: terraDrawSelectMode, eventName: "onDragStart" },
-    { origin: terraDrawSelectMode, eventName: "onDrag" },
+    { origin: terraDrawSelectMode, eventName: 'onDragStart' },
+    { origin: terraDrawSelectMode, eventName: 'onDrag' },
   ]);
 
   const terraDrawLeafletAdapter = new TerraDrawLeafletAdapter({
@@ -129,13 +129,13 @@ const terraDrawSetup = (
 
   (terraDrawMarkerMode.onClick as any) = (e: any) => {
     dispatch({
-      type: "addElemento",
+      type: 'addElemento',
       posicao: [e.lat, e.lng],
-      tipo: "Marker",
+      tipo: 'Marker',
     });
     setTimeout(() => {
       draw.setMode(elementos.Hand.nome);
-      dispatch({ type: "selecionarElementoInteracao", arg: elementos.Hand });
+      dispatch({ type: 'selecionarElementoInteracao', arg: elementos.Hand });
     }, 10);
   };
 
@@ -146,36 +146,36 @@ const terraDrawSetup = (
       lng: e.lng,
     });
     oldEventOnClick.apply(terraDrawSelectMode, [e]);
-    if (e.button === "right") {
+    if (e.button === 'right') {
       const element = draw.getSnapshot()[0];
       if (element)
         dispatch({
-          type: "alteraCoordinatesElemento",
+          type: 'alteraCoordinatesElemento',
           posicao: element.geometry.coordinates as
             | [number, number]
             | [number, number][]
             | [number, number][][],
           id: element.id,
         });
-    } else if (featuresInClick.length === 0 && e.button === "left") {
+    } else if (featuresInClick.length === 0 && e.button === 'left') {
       draw.clear();
       dispatch({
-        type: "selecionarElementoFoco",
+        type: 'selecionarElementoFoco',
       });
     }
   };
 
   terraDrawImageOverlayMode.onClick = () => {
     dispatch({
-      type: "addImageOverlay",
+      type: 'addImageOverlay',
     });
     setTimeout(() => {
       draw.setMode(elementos.Hand.nome);
-      dispatch({ type: "selecionarElementoInteracao", arg: elementos.Hand });
+      dispatch({ type: 'selecionarElementoInteracao', arg: elementos.Hand });
     }, 10);
   };
 
-  draw.on("finish", (e) => {
+  draw.on('finish', (e) => {
     setTimeout(() => {
       const element = draw.getSnapshot().find((x) => x.id === e);
       const listaEl = pegarConteudoElementos();
@@ -183,7 +183,7 @@ const terraDrawSetup = (
         if (listaEl.some((x) => x.id === element.id)) {
           draw.clear();
           dispatch({
-            type: "alteraCoordinatesElemento",
+            type: 'alteraCoordinatesElemento',
             posicao: element.geometry.coordinates as
               | [number, number]
               | [number, number][]
@@ -192,7 +192,7 @@ const terraDrawSetup = (
           });
         } else {
           dispatch({
-            type: "addElemento",
+            type: 'addElemento',
             posicao: element.geometry.coordinates as
               | [number, number]
               | [number, number][],
@@ -204,7 +204,7 @@ const terraDrawSetup = (
           setTimeout(() => {
             draw.setMode(elementos.Hand.nome);
             dispatch({
-              type: "selecionarElementoInteracao",
+              type: 'selecionarElementoInteracao',
               arg: elementos.Hand,
             });
           }, 10);
@@ -215,7 +215,7 @@ const terraDrawSetup = (
   // Start drawing
   draw.start();
   // Set the mode to polygon
-  draw.setMode("select");
+  draw.setMode('select');
 
   return draw;
 };

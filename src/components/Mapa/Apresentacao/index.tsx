@@ -1,28 +1,34 @@
-"use client";
-import { MapContainer, ImageOverlay } from "react-leaflet";
-import { LatLng, LatLngBounds } from "leaflet";
-import { useEffect, useState } from "react";
-import React from "react";
+'use client';
 import CustomControlLeaflet, {
   POSITION_CLASSES_CUSTOM_CONTROL,
-} from "@/components/CustomControlLeaflet/CustomControlLeaflet";
-import { useMapaContext, useMapaDispatch } from "@/components/Mapa/MapaContext";
-import { Fab, Grid2 } from "@mui/material";
+} from '@/components/CustomControlLeaflet/CustomControlLeaflet';
+import { useMapaContext, useMapaDispatch } from '@/components/Mapa/MapaContext';
+import { usePresignedUrl } from '@/hooks/usePresignedUrl';
+import { Fab, Grid2 } from '@mui/material';
+import { Icon, LatLng, LatLngBounds, Map } from 'leaflet';
+import React, { useEffect, useState } from 'react';
+import { ImageOverlay, MapContainer } from 'react-leaflet';
 // import Elementos from "./Elementos";
-import { Close } from "@mui/icons-material";
-import { MODO_VISAO } from "../mapaContextTypes";
-import { getImageDimensions } from "../MapaUtils";
-import useWindowDimensions from "../../Studio/useWindowDimensions";
-import Legenda from "./legenda";
-import { Map } from "leaflet";
-import PlanoFundoMapaComum from "@/components/Mapa/PlanoFundoMapaComum/PlanoFundoMapaComum";
-import ConteudoMapa from "../ConteudoMapa";
-import SliderLinhaTempo from "../SliderLinhaTempo";
-import useCaixaDialogo from "@/components/CaixaDialogo/useCaixaDialogo";
+import useCaixaDialogo from '@/components/CaixaDialogo/useCaixaDialogo';
+import PlanoFundoMapaComum from '@/components/Mapa/PlanoFundoMapaComum/PlanoFundoMapaComum';
+import { Close } from '@mui/icons-material';
+import useWindowDimensions from '../../Studio/useWindowDimensions';
+import ConteudoMapa from '../ConteudoMapa';
+import { MODO_VISAO } from '../mapaContextTypes';
+import { getImageDimensions } from '../MapaUtils';
+import SliderLinhaTempo from '../SliderLinhaTempo';
+import Legenda from './legenda';
+
+delete (Icon.Default.prototype as any)._getIconUrl;
+Icon.Default.mergeOptions({
+  iconUrl: '/marker-icon.png',
+  iconRetinaUrl: '/marker-icon-2x.png',
+  shadowUrl: '/marker-shadow.png',
+});
 
 export const isMobile = (height: number, width: number) => {
   return (
-    "ontouchstart" in document.documentElement &&
+    'ontouchstart' in document.documentElement &&
     !!navigator.userAgent.match(/Mobi/) &&
     height > width
   );
@@ -37,12 +43,19 @@ const Apresentacao = () => {
   const [alturaLegenda, setAlturaLegenda] = useState(height * 0.5);
   const { openModalConfirm } = useCaixaDialogo();
 
+  const [resolvedUrlMapaProprio] = usePresignedUrl(
+    mapaContext.urlMapaProprio,
+    mapaContext.id
+  );
   const [bounds, setBounds] = useState<LatLngBounds>(
     new LatLngBounds([0, 0], [1, 1.5])
   );
   useEffect(() => {
-    if (mapaContext.modoVisao === MODO_VISAO.mapaProprio)
-      getImageDimensions(mapaContext.urlMapaProprio).then((dimensions) =>
+    if (
+      mapaContext.modoVisao === MODO_VISAO.mapaProprio &&
+      resolvedUrlMapaProprio
+    )
+      getImageDimensions(resolvedUrlMapaProprio).then((dimensions) =>
         setBounds(
           new LatLngBounds(
             [0, 0],
@@ -50,7 +63,7 @@ const Apresentacao = () => {
           )
         )
       );
-  }, [mapaContext.modoVisao, mapaContext.urlMapaProprio]);
+  }, [mapaContext.modoVisao, resolvedUrlMapaProprio]);
 
   const position = React.useMemo(
     () =>
@@ -82,11 +95,11 @@ const Apresentacao = () => {
             />
           </Grid2>
         )}
-        <Grid2 size={"grow"}>
+        <Grid2 size={'grow'}>
           <div
             style={{
               height: _isMobile ? height - alturaLegenda : height,
-              display: "grid",
+              display: 'grid',
             }}
           >
             <MapContainer
@@ -99,13 +112,15 @@ const Apresentacao = () => {
               {mapaContext.modoVisao === MODO_VISAO.openstreetmap && (
                 <PlanoFundoMapaComum />
               )}
-              {mapaContext.modoVisao === MODO_VISAO.mapaProprio && (
-                <ImageOverlay
-                  bounds={bounds}
-                  url={mapaContext.urlMapaProprio}
-                />
+              {mapaContext.modoVisao === MODO_VISAO.mapaProprio &&
+                resolvedUrlMapaProprio && (
+                  <ImageOverlay bounds={bounds} url={resolvedUrlMapaProprio} />
+                )}
+              {(mapaContext.modoVisao === MODO_VISAO.openstreetmap ||
+                (mapaContext.modoVisao === MODO_VISAO.mapaProprio &&
+                  resolvedUrlMapaProprio)) && (
+                <ConteudoMapa isApresentacao={true} />
               )}
-              <ConteudoMapa isApresentacao={true} />
               <CustomControlLeaflet
                 position={POSITION_CLASSES_CUSTOM_CONTROL.topright}
               >
@@ -114,19 +129,19 @@ const Apresentacao = () => {
                   onClick={() =>
                     !mapaContext.apenasApresentacao
                       ? openModalConfirm({
-                          message: "Você quer editar esse projeto ou sair?",
+                          message: 'Você quer editar esse projeto ou sair?',
                           onConfirm: () =>
                             dispatch({
-                              type: "alteraPropriedadeGeral",
-                              nomePropriedade: "playStatus",
+                              type: 'alteraPropriedadeGeral',
+                              nomePropriedade: 'playStatus',
                               valorPropriedade: -1,
                             }),
-                          title: "Continuar editando?",
-                          cancelarTitle: "Sair",
-                          confirmarTitle: "Sim, continuar editando!",
-                          onCancel: () => (window.location.href = "/"),
+                          title: 'Continuar editando?',
+                          cancelarTitle: 'Sair',
+                          confirmarTitle: 'Sim, continuar editando!',
+                          onCancel: () => (window.location.href = '/'),
                         })
-                      : (window.location.href = "/")
+                      : (window.location.href = '/')
                   }
                   sx={{ zIndex: 100000 }}
                 >
@@ -140,7 +155,7 @@ const Apresentacao = () => {
               <CustomControlLeaflet
                 position={POSITION_CLASSES_CUSTOM_CONTROL.bottomleft}
                 classCustom={
-                  "leaflet-control leaflet-bar leaflet-speeddial leaflet-speeddial-full-width"
+                  'leaflet-control leaflet-bar leaflet-speeddial leaflet-speeddial-full-width'
                 }
               >
                 <SliderLinhaTempo isMobile={_isMobile} />

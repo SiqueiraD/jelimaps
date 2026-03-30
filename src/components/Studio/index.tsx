@@ -1,24 +1,24 @@
-import React, { useEffect, useRef, useState } from "react";
-import "leaflet/dist/leaflet.css";
-import { isPoligonoGrande } from "@/components/Mapa/MapaUtils/contarPontosHelper";
-import { Grid2 } from "@mui/material";
-import Mapa from "./MapaAdapter";
-import { Rnd } from "react-rnd";
-import useWindowDimensions from "./useWindowDimensions";
-import { ElementosLateral } from "./Elementos";
-import L from "leaflet";
-import { TerraDraw } from "terra-draw";
-import { useMapaContext, useMapaDispatch } from "../Mapa/MapaContext";
-import { tipoElemento } from "../Mapa/mapaContextTypes";
-import MapaContextChanger from "../Mapa/ContextChangers";
-import terraDrawSetup from "./terraDrawSetup";
-import DraggerResize from "../DraggerResize";
-import useBarraAlerta from "../BarraAlerta/useBarraAlerta";
-import Tutoriais from "./Tutoriais";
-import { useSession } from "next-auth/react";
-import DefaultTemplate from "@/main/template/DefaultTemplate";
-import Propriedades from "./Propriedades";
-import LinhaTempo from "./LinhaTempo/Index";
+import { isPoligonoGrande } from '@/components/Mapa/MapaUtils/contarPontosHelper';
+import DefaultTemplate from '@/main/template/DefaultTemplate';
+import { Grid2 } from '@mui/material';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { useSession } from 'next-auth/react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Rnd } from 'react-rnd';
+import { TerraDraw } from 'terra-draw';
+import useBarraAlerta from '../BarraAlerta/useBarraAlerta';
+import DraggerResize from '../DraggerResize';
+import MapaContextChanger from '../Mapa/ContextChangers';
+import { useMapaContext, useMapaDispatch } from '../Mapa/MapaContext';
+import { tipoElemento } from '../Mapa/mapaContextTypes';
+import { ElementosLateral } from './Elementos';
+import LinhaTempo from './LinhaTempo/Index';
+import Mapa from './MapaAdapter';
+import Propriedades from './Propriedades';
+import terraDrawSetup from './terraDrawSetup';
+import Tutoriais from './Tutoriais';
+import useWindowDimensions from './useWindowDimensions';
 // import moment from "moment";
 
 // Define a função para inserir um texto no clipboard
@@ -26,13 +26,13 @@ async function copyToClipboard(text) {
   try {
     await navigator.clipboard.writeText(text);
   } catch (err) {
-    console.error("Falha ao copiar texto: ", err);
+    console.error('Falha ao copiar texto: ', err);
   }
 }
 
 const Studio = () => {
   const { data: session, status } = useSession();
-  const loading = status === "loading";
+  const loading = status === 'loading';
   const { height, width } = useWindowDimensions();
   const [rndRef, setRndRef] = useState<Rnd>();
   const [map, setMap] = useState<L.Map>();
@@ -42,7 +42,7 @@ const Studio = () => {
   const elementosSelecionadosRef = useRef(null);
   const [draw, setDraw] = useState<TerraDraw>(null);
   const [altura, setAltura] = useState(height * 0.25);
-  const displaYNoneStyle = { display: "none" };
+  const displaYNoneStyle = { display: 'none' };
   const [larguraPropriedades, setLargurasPropriedades] = useState(
     mapaContext.larguraPropriedades ?? 250
   );
@@ -72,15 +72,15 @@ const Studio = () => {
           if (x) {
             try {
               const elementoAntigo = JSON.parse(x) as tipoElemento;
-              if (!verificaTipo(elementoAntigo)) throw new Error("");
+              if (!verificaTipo(elementoAntigo)) throw new Error('');
               dispatch({
-                type: "addElementoCopiado",
+                type: 'addElementoCopiado',
                 elemento: elementoAntigo,
               });
             } catch (error) {
               barraAlerta.showSnackBar({
-                text: "Não é um elemento válido",
-                color: "error",
+                text: 'Não é um elemento válido',
+                color: 'error',
               });
             }
           }
@@ -91,14 +91,14 @@ const Studio = () => {
   );
 
   function verificaTipo(obj: any): obj is tipoElemento {
-    return obj && typeof obj.id === "string" && typeof obj.dataRef === "string";
+    return obj && typeof obj.id === 'string' && typeof obj.dataRef === 'string';
   }
 
   useEffect(() => {
     if (map) {
-      map.addEventListener("keydown", handleKeyDown);
+      map.addEventListener('keydown', handleKeyDown);
       return () => {
-        map.removeEventListener("keydown", handleKeyDown);
+        map.removeEventListener('keydown', handleKeyDown);
       };
     }
   }, [handleKeyDown, map]);
@@ -119,9 +119,9 @@ const Studio = () => {
     if (map && !draw) {
       const _draw = terraDrawSetup(dispatch, map, pegarConteudoElementos);
       setDraw(_draw);
-      map.on("click", () => {
+      map.on('click', () => {
         const modeDraw = (_draw as any)._mode;
-        if (modeDraw?._state == "selecting")
+        if (modeDraw?._state == 'selecting')
           setTimeout(() => {
             const features = _draw.getSnapshot();
             _draw.clear();
@@ -156,7 +156,7 @@ const Studio = () => {
                     if (_draw.hasFeature(primeiraFeatureValida.id))
                       _draw.selectFeature(primeiraFeatureValida.id);
                   } catch (error) {
-                    console.log("deueurro", { error });
+                    console.log('deueurro', { error });
                   }
                 }, 250);
               }
@@ -182,7 +182,7 @@ const Studio = () => {
     mapaContext.elementosFoco,
   ]);
 
-  if (process.env.FEATUREFLAG_LOGIN == "true") {
+  if (process.env.FEATUREFLAG_LOGIN == 'true') {
     if (loading)
       return (
         <DefaultTemplate>
@@ -198,7 +198,7 @@ const Studio = () => {
   }
 
   return (
-    <Grid2 container sx={{ height: "100%" }} id="studioMapa">
+    <Grid2 container sx={{ height: '100%' }} id="studioMapa">
       {
         <>
           <Grid2 container size={12}>
@@ -244,18 +244,18 @@ const Studio = () => {
                 bottomRight: displaYNoneStyle,
                 top: { height: 25 },
               }}
-              size={{ height: altura, width: "100%" }}
+              size={{ height: altura, width: '100%' }}
               disableDragging
               position={{ y: height - altura, x: 0 }}
               resizeHandleComponent={{
                 top: (
                   <DraggerResize
-                    id={"parentSeletorResize"}
+                    id={'parentSeletorResize'}
                     sx={{
-                      borderStyle: "outset",
+                      borderStyle: 'outset',
                       borderBottom: 2,
                       height: 20,
-                      backgroundColor: "#e2e2e2",
+                      backgroundColor: '#e2e2e2',
                       marginTop: 0.6,
                     }}
                   ></DraggerResize>
@@ -274,7 +274,7 @@ const Studio = () => {
                 container
                 size={12}
                 mt={2.2}
-                sx={{ height: "95%", maxHeight: altura }}
+                sx={{ height: '95%', maxHeight: altura }}
               >
                 <LinhaTempo tempoAtualRef={tempoAtualRef} altura={altura} />
               </Grid2>

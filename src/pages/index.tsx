@@ -21,20 +21,20 @@ const cards = [
       "/assets/tour-pequena-africa-no-rio-de-janeiro-morro-conceicao-rua.jpg",
     nome: "Pequena África",
     descricao: "Processo de diáspora africana num passeio pelo Rio de Janeiro",
-    url: "/mapa/pequena-africa",
+    url: "/mapa/exemplo?id=pequena-africa",
   },
   {
     imageUrl: "/assets/one-piece.jpeg",
     nome: "One Piece - Saga Alabasta",
     descricao: "Resumo da primeira saga da grand line (não finalizado)",
-    url: "/mapa/one-piece",
+    url: "/mapa/exemplo?id=one-piece",
   },
   {
     imageUrl: "/assets/OIP.jpeg",
     nome: "Golpe de 64",
     descricao:
       "Baseado em informações do documentário o dia que durou 21 anos e dados da Wikipedia",
-    url: "/mapa/golpe-64",
+    url: "/mapa/exemplo?id=golpe-64",
   },
 ];
 export default function Home() {
@@ -91,7 +91,7 @@ export default function Home() {
                       title: "Você tem um projeto em andamento",
                       message: "Deseja continuar ou começar do zero?",
                       onConfirm: () => {
-                        router.push("/mapa/novo");
+                        router.push("/mapa/exemplo?id=novo");
                       },
                       onCancel: () => {
                         router.push("/mapa");
