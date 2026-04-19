@@ -1,20 +1,76 @@
-import React, { useState } from "react";
+import ImagemPresignada from '@/components/Atomic/ImagemPresignada';
+import contextChangers from '@/components/Mapa/ContextChangers';
+import { useMapaContext } from '@/components/Mapa/MapaContext';
+import { tipoElemento } from '@/components/Mapa/mapaContextTypes';
+import useWindowDimensions from '@/components/Studio/useWindowDimensions';
 import {
-  Paper,
   Card,
   CardActionArea,
-  CardMedia,
   CardContent,
+  Paper,
   Typography,
-} from "@mui/material";
-import Leaflet, { Map } from "leaflet";
-import contextChangers from "@/components/Mapa/ContextChangers";
-import { useMapaContext } from "@/components/Mapa/MapaContext";
-import { tipoElemento } from "@/components/Mapa/mapaContextTypes";
-import LegendaLateral from "./lateral";
-import LegendaMobile from "./mobile";
-import { isMobile } from "..";
-import useWindowDimensions from "@/components/Studio/useWindowDimensions";
+} from '@mui/material';
+import Leaflet, { Map } from 'leaflet';
+import React, { useState } from 'react';
+import { isMobile } from '..';
+import LegendaLateral from './lateral';
+import LegendaMobile from './mobile';
+
+const LegendaCardItem = ({
+  elemento,
+  larguraLegenda,
+  map,
+}: {
+  elemento: tipoElemento;
+  map: Map;
+  larguraLegenda: number;
+}) => {
+  return (
+    <Card sx={{}} key={elemento.id}>
+      <CardActionArea
+        onClick={() => {
+          if (
+            elemento.dataRef === 'Marker' &&
+            (elemento.geometry.coordinates as [number, number])
+          ) {
+            map.flyTo(
+              elemento.geometry.coordinates as [number, number],
+              elemento.zoom
+            );
+          } else if (!elemento.center) {
+            const bordas = contextChangers.bordasDoElemento(
+              elemento,
+              map,
+              Leaflet,
+              larguraLegenda
+            );
+            bordas && map.flyToBounds(bordas);
+          } else {
+            map.flyTo(elemento.center, elemento.zoom);
+          }
+        }}
+      >
+        {elemento.imagemURL && (
+          <ImagemPresignada
+            imagemURL={elemento.imagemURL}
+            alt={`imagem do ${elemento.nome}`}
+            width={larguraLegenda}
+            height={Math.round(larguraLegenda * 0.6)}
+            style={{ width: '100%', height: 'auto' }}
+          />
+        )}
+        <CardContent>
+          <Typography gutterBottom variant="h5" component="div">
+            {elemento.nome}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {elemento.texto}
+          </Typography>
+        </CardContent>
+      </CardActionArea>
+    </Card>
+  );
+};
 
 export const ConteudoLegenda = ({
   elementosVisiveis,
@@ -29,57 +85,20 @@ export const ConteudoLegenda = ({
     <Paper
       elevation={0}
       sx={{
-        height: "100%",
-        overflowWrap: "anywhere",
-        overflowY: "scroll",
+        height: '100%',
+        overflowWrap: 'anywhere',
+        overflowY: 'scroll',
       }}
     >
       {elementosVisiveis &&
-        elementosVisiveis.map((x) => {
-          return (
-            <Card sx={{}} key={x.id}>
-              <CardActionArea
-                onClick={() => {
-                  if (
-                    x.dataRef === "Marker" &&
-                    (x.geometry.coordinates as [number, number])
-                  ) {
-                    map.flyTo(
-                      x.geometry.coordinates as [number, number],
-                      x.zoom
-                    );
-                  } else if (!x.center) {
-                    const bordas = contextChangers.bordasDoElemento(
-                      x,
-                      map,
-                      Leaflet,
-                      larguraLegenda
-                    );
-                    bordas && map.flyToBounds(bordas);
-                  } else {
-                    map.flyTo(x.center, x.zoom);
-                  }
-                }}
-              >
-                {x.imagemURL && (
-                  <CardMedia
-                    component="img"
-                    image={x.imagemURL}
-                    alt={`imagem do ${x.nome}`}
-                  />
-                )}
-                <CardContent>
-                  <Typography gutterBottom variant="h5" component="div">
-                    {x.nome}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {x.texto}
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-            </Card>
-          );
-        })}
+        elementosVisiveis.map((x) => (
+          <LegendaCardItem
+            key={x.id}
+            elemento={x}
+            larguraLegenda={larguraLegenda}
+            map={map}
+          />
+        ))}
     </Paper>
   );
 };
@@ -106,8 +125,8 @@ const Legenda = (props: {
   const [cenaAtual, setCenaAtual] = useState(null);
 
   React.useEffect(() => {
-    const el = document.getElementById("seletorResize");
-    if (el) el.parentElement.id = "parentSeletorResize";
+    const el = document.getElementById('seletorResize');
+    if (el) el.parentElement.id = 'parentSeletorResize';
   }, []);
 
   const moverMapaParaCena = React.useCallback(

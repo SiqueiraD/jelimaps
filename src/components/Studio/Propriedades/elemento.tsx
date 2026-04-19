@@ -1,45 +1,47 @@
-import React from "react";
+import Button from '@/components/Atomic/Button';
+import ImagemPresignada from '@/components/Atomic/ImagemPresignada';
+import ImageUploadField from '@/components/Atomic/ImageUploadField';
+import useCaixaDialogo from '@/components/CaixaDialogo/useCaixaDialogo';
+import ImageResolver from '@/components/ImageUrlResolver';
 import {
-  styled,
-  List,
+  default as contextChangers,
+  default as MapaContextChanger,
+} from '@/components/Mapa/ContextChangers';
+import { useMapaContext, useMapaDispatch } from '@/components/Mapa/MapaContext';
+import { ExpandLess, ExpandMore } from '@mui/icons-material';
+import {
   Collapse,
-  Divider,
-  ListItemButton,
-  ListItemText,
-  ListItem,
-  TextField,
-  FormControlLabel,
-  Switch,
-  Slider,
-  Typography,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Container,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  FormControl,
+  FormControlLabel,
   ImageList,
   ImageListItem,
-} from "@mui/material";
-import { HexColorPicker } from "react-colorful";
-import { useMapaContext, useMapaDispatch } from "@/components/Mapa/MapaContext";
-import { ExpandLess, ExpandMore } from "@mui/icons-material";
-import { Form, Formik } from "formik";
-import * as Yup from "yup";
-import moment from "moment";
-import MapaContextChanger from "@/components/Mapa/ContextChangers";
-import useCaixaDialogo from "@/components/CaixaDialogo/useCaixaDialogo";
-import Leaflet, { Map } from "leaflet";
-import ImageResolver from "@/components/ImageUrlResolver";
-import ImageUploadField from "@/components/Atomic/ImageUploadField";
-import Button from "@/components/Atomic/Button";
-import contextChangers from "@/components/Mapa/ContextChangers";
-import useWindowDimensions from "../useWindowDimensions";
-import Image from "next/image";
+  InputLabel,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  MenuItem,
+  Select,
+  Slider,
+  styled,
+  Switch,
+  TextField,
+  Typography,
+} from '@mui/material';
+import { Form, Formik } from 'formik';
+import Leaflet, { Map } from 'leaflet';
+import moment from 'moment';
+import React from 'react';
+import { HexColorPicker } from 'react-colorful';
+import * as Yup from 'yup';
+import useWindowDimensions from '../useWindowDimensions';
 
-const WrapperStyled = styled("div")``;
+const WrapperStyled = styled('div')``;
 
 export default function Elemento(props: { map: Map }) {
   const { map } = props;
@@ -81,10 +83,10 @@ export default function Elemento(props: { map: Map }) {
 
   const handleDispatchInserirImageOverlay = React.useCallback(async () => {
     dispatch({
-      type: "editarPropriedade",
+      type: 'editarPropriedade',
       tipo: elementoRef.current.dataRef,
       id: elementoRef.current.id,
-      nomePropriedade: "imagemURL",
+      nomePropriedade: 'imagemURL',
       valorPropriedade: await ImageResolver.UrlResolver(urlImageRef.current),
     });
     elementoRef.current = urlImageRef.current = null;
@@ -93,8 +95,8 @@ export default function Elemento(props: { map: Map }) {
 
   const handleInserirImagem = React.useCallback(() => {
     openModalConfirm({
-      title: "",
-      message: "",
+      title: '',
+      message: '',
       onConfirm,
       cancelarNotVisible: true,
       confirmarNotVisible: true,
@@ -103,8 +105,10 @@ export default function Elemento(props: { map: Map }) {
           <DialogTitle>Por favor, insira a url da imagem</DialogTitle>
           <DialogContent dividers>
             <ImageUploadField
-              defaultValue={urlImageRef.current ?? ""}
-              onChange={(url) => { urlImageRef.current = url; }}
+              defaultValue={urlImageRef.current ?? ''}
+              onChange={(url) => {
+                urlImageRef.current = url;
+              }}
               mapaId={mapaContext.id}
               previewWidth={Math.round(width * 0.21)}
               previewHeight={Math.round(height * 0.21)}
@@ -116,9 +120,16 @@ export default function Elemento(props: { map: Map }) {
         </div>
       ),
     });
-  }, [openModalConfirm, onConfirm, width, height, mapaContext.id, handleDispatchInserirImageOverlay]);
+  }, [
+    openModalConfirm,
+    onConfirm,
+    width,
+    height,
+    mapaContext.id,
+    handleDispatchInserirImageOverlay,
+  ]);
   return (
-    <List sx={{ height: "100%", pt: 0 }} key={"lista"}>
+    <List sx={{ height: '100%', pt: 0 }} key={'lista'}>
       {carregaElementosFoco() &&
         carregaElementosFoco().map((x, i) => {
           return (
@@ -148,19 +159,19 @@ export default function Elemento(props: { map: Map }) {
                 <ListItem>
                   <Formik
                     initialValues={x}
-                    onSubmit={() => console.log("submtou")}
+                    onSubmit={() => console.log('submtou')}
                     validateOnBlur={true}
                     validationSchema={Yup.object({
                       cenaInicio: Yup.date().test(
-                        "data-inicio-menor-que-fim",
-                        "O inicio deve ser menor que o final da primeira cena.",
+                        'data-inicio-menor-que-fim',
+                        'O inicio deve ser menor que o final da primeira cena.',
                         (value, context) =>
                           moment(value) <
                           moment(context.options.context.cenaFim)
                       ),
                       cenaFim: Yup.date().test(
-                        "data-fim-maior-que-inicio",
-                        "O final deve ser maior que o inicio da ultima cena.",
+                        'data-fim-maior-que-inicio',
+                        'O final deve ser maior que o inicio da ultima cena.',
                         (value, context) =>
                           moment(value) >
                           moment(context.options.context.cenaInicio)
@@ -173,7 +184,7 @@ export default function Elemento(props: { map: Map }) {
                           onBlur={(e: any) => {
                             if (e.target.name && e.target.value)
                               dispatch({
-                                type: "editarPropriedade",
+                                type: 'editarPropriedade',
                                 tipo: x.dataRef,
                                 id: x.id,
                                 nomePropriedade: e.target.name,
@@ -184,10 +195,10 @@ export default function Elemento(props: { map: Map }) {
                           <Button
                             onClick={() => {
                               dispatch({
-                                type: "editarPropriedade",
+                                type: 'editarPropriedade',
                                 tipo: x.dataRef,
                                 id: x.id,
-                                nomePropriedade: "zoom",
+                                nomePropriedade: 'zoom',
                                 valorPropriedade: map.getZoom(),
                               });
                             }}
@@ -244,22 +255,22 @@ export default function Elemento(props: { map: Map }) {
                             >
                               {(formik.values as any).imagemURL &&
                               (formik.values as any).imagemURL.length
-                                ? "Trocar imagem"
-                                : "Inserir imagem"}
+                                ? 'Trocar imagem'
+                                : 'Inserir imagem'}
                             </Button>
                             {(formik.values as any).imagemURL &&
                               (formik.values as any).imagemURL.length && (
                                 <Button
                                   onClick={() => {
                                     openModalConfirm({
-                                      title: "Deletar item",
-                                      message: "Você tem certeza disso?",
+                                      title: 'Deletar item',
+                                      message: 'Você tem certeza disso?',
                                       onConfirm: () => {
                                         dispatch({
-                                          type: "editarPropriedade",
+                                          type: 'editarPropriedade',
                                           tipo: elementoRef.current.dataRef,
                                           id: elementoRef.current.id,
-                                          nomePropriedade: "imagemURL",
+                                          nomePropriedade: 'imagemURL',
                                           valorPropriedade: null,
                                         });
                                       },
@@ -268,25 +279,24 @@ export default function Elemento(props: { map: Map }) {
                                   variant="contained"
                                   size="small"
                                 >
-                                  {"Deletar imagem"}
+                                  {'Deletar imagem'}
                                 </Button>
                               )}
                             {(formik.values as any).imagemURL &&
                               (formik.values as any).imagemURL.length && (
                                 <ImageList>
                                   <ImageListItem cols={2}>
-                                    {
-                                      <Image
-                                        src={(formik.values as any).imagemURL}
-                                        width={width * 0.21}
-                                        height={height * 0.21}
-                                        alt={`Imagem carregada pelo link: ${
-                                          (formik.values as any).imagemURL
-                                        }`}
-                                        placeholder="blur"
-                                        blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
-                                      />
-                                    }
+                                    <ImagemPresignada
+                                      imagemURL={
+                                        (formik.values as any).imagemURL
+                                      }
+                                      mapaId={mapaContext.id}
+                                      width={Math.round(width * 0.21)}
+                                      height={Math.round(height * 0.21)}
+                                      alt={`Imagem carregada pelo link: ${
+                                        (formik.values as any).imagemURL
+                                      }`}
+                                    />
                                   </ImageListItem>
                                 </ImageList>
                               )}
@@ -303,17 +313,17 @@ export default function Elemento(props: { map: Map }) {
                               <Select
                                 labelId="demo-simple-select-standard-label"
                                 id="demo-simple-select-standard"
-                                value={x.cenaSelecionada ?? ""}
+                                value={x.cenaSelecionada ?? ''}
                                 sx={{
                                   backgroundColor: x.cenaSelecionada
                                     ? mapaContext.conteudo.cenas.find(
                                         (z) => z.id === x.cenaSelecionada
                                       ).color
-                                    : "",
+                                    : '',
                                 }}
                                 onChange={(e) => {
                                   dispatch({
-                                    type: "selecionarCenaParaElemento",
+                                    type: 'selecionarCenaParaElemento',
                                     elemento: x,
                                     tipo: x.dataRef,
                                     id: e.target.value,
@@ -420,19 +430,19 @@ export default function Elemento(props: { map: Map }) {
                                     //   (z) => z.id === x.id
                                     // ).draggable = !formik.values.draggable;
                                     dispatch({
-                                      type: "editarPropriedade",
+                                      type: 'editarPropriedade',
                                       tipo: x.dataRef,
                                       id: x.id,
-                                      nomePropriedade: "draggable",
+                                      nomePropriedade: 'draggable',
                                       valorPropriedade:
                                         !formik.values.draggable,
                                     });
                                     formik.handleChange(e);
                                   }}
-                                  name={"draggable"}
+                                  name={'draggable'}
                                 />
                               }
-                              label={"Editar elemento no mapa"}
+                              label={'Editar elemento no mapa'}
                             />
 
                             <FormControl fullWidth>
@@ -443,17 +453,17 @@ export default function Elemento(props: { map: Map }) {
                                 color={(formik.values as any).color}
                                 onChange={(newColor) => {
                                   dispatch({
-                                    type: "editarPropriedade",
+                                    type: 'editarPropriedade',
                                     tipo: x.dataRef,
                                     id: x.id,
-                                    nomePropriedade: "color",
+                                    nomePropriedade: 'color',
                                     valorPropriedade: newColor,
                                   });
                                 }}
                               />
                             </FormControl>
                             {((formik.values as any).positionBL ||
-                              (formik.values as any).dataRef === "Marker") &&
+                              (formik.values as any).dataRef === 'Marker') &&
                               ((formik.values as any).opacity ? (
                                 <>
                                   <Typography>Opacidade</Typography>
@@ -465,10 +475,10 @@ export default function Elemento(props: { map: Map }) {
                                     max={1}
                                     onChange={(e, newV) =>
                                       dispatch({
-                                        type: "editarPropriedade",
+                                        type: 'editarPropriedade',
                                         tipo: x.dataRef,
                                         id: x.id,
-                                        nomePropriedade: "opacity",
+                                        nomePropriedade: 'opacity',
                                         valorPropriedade: newV,
                                       })
                                     }
@@ -480,17 +490,17 @@ export default function Elemento(props: { map: Map }) {
                                 <Button
                                   onClick={() =>
                                     dispatch({
-                                      type: "editarPropriedade",
+                                      type: 'editarPropriedade',
                                       tipo: x.dataRef,
                                       id: x.id,
-                                      nomePropriedade: "opacity",
+                                      nomePropriedade: 'opacity',
                                       valorPropriedade: 0.9,
                                     })
                                   }
                                 >
                                   {(formik.values as any).opacity === 0
-                                    ? "Exibir elemento"
-                                    : "Ativar Opacidade"}
+                                    ? 'Exibir elemento'
+                                    : 'Ativar Opacidade'}
                                 </Button>
                               ))}
                             <Button
@@ -504,7 +514,7 @@ export default function Elemento(props: { map: Map }) {
                                 bordas && map.setView(bordas.getCenter());
                               }}
                             >
-                              {"Ver no mapa"}
+                              {'Ver no mapa'}
                             </Button>
                           </Container>
                         </Form>
