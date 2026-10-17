@@ -1,8 +1,8 @@
 import { elementoProto } from "@/main/constants/elementos";
-import { LatLng, LatLngBoundsExpression, MapOptions, Map } from "leaflet";
+import { FormikProps } from "formik";
+import { LatLng, LatLngBoundsExpression, Map, MapOptions } from "leaflet";
 import { NIL } from "uuid";
 import { DateType, TimelineOptions } from "vis-timeline";
-import { FormikProps } from "formik";
 // import { GeoJSONStoreFeatures } from "terra-draw";
 
 export type tipoGenericoElementoTimeline = periodoInicioFim & {
@@ -99,6 +99,8 @@ export type mapaContextSchema = periodoInicioFim &
     // 1  := reproduzindo
     // 2  := apresentando
     duracaoApresentacao?: number;
+    timelineMode?: "advanced" | "simple";
+    activeSceneId?: NIL;
     simpleTimeline?: boolean;
     apenasApresentacao?: boolean;
     caixaDialogo?: string;
@@ -157,4 +159,7 @@ export type actionContextChange = {
   formik?: FormikProps<any>;
   mapContext?: mapaContextSchema;
   map?: Map;
+  sceneIds?: NIL[];
+  durationSeconds?: number;
+  timelineMode?: "advanced" | "simple";
 };

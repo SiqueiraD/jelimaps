@@ -1,24 +1,24 @@
-import React, { useState } from "react";
-import {
-  ListItemButton,
-  ListItemText,
-  ListItem,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Container,
-  Typography,
-} from "@mui/material";
-import { useMapaContext, useMapaDispatch } from "@/components/Mapa/MapaContext";
-import { Queue } from "@mui/icons-material";
-import { Form, Formik } from "formik";
-import * as Yup from "yup";
-import moment from "moment";
-import { elementoPadrao } from "@/components/Mapa/mapaContextTypes";
-import useCaixaDialogo from "@/components/CaixaDialogo/useCaixaDialogo";
 import Button from "@/components/Atomic/Button";
+import useCaixaDialogo from "@/components/CaixaDialogo/useCaixaDialogo";
+import { useMapaContext, useMapaDispatch } from "@/components/Mapa/MapaContext";
+import { elementoPadrao } from "@/components/Mapa/mapaContextTypes";
+import { Queue } from "@mui/icons-material";
+import {
+    Container,
+    FormControl,
+    InputLabel,
+    ListItem,
+    ListItemButton,
+    ListItemText,
+    MenuItem,
+    Select,
+    TextField,
+    Typography,
+} from "@mui/material";
+import { Form, Formik } from "formik";
+import moment from "moment";
+import React, { useState } from "react";
+import * as Yup from "yup";
 
 export default function Cenas() {
   const mapaContext = useMapaContext();
@@ -28,6 +28,12 @@ export default function Cenas() {
     mapaContext?.conteudo.cenas.find((x) => x.properties?.selected) ??
       mapaContext?.conteudo.cenas[0]
   );
+  if (mapaContext.timelineMode === "simple") {
+    cenaSelectedRef.current =
+      mapaContext.conteudo.cenas.find(
+        (cena) => cena.id === mapaContext.activeSceneId
+      ) ?? mapaContext.conteudo.cenas[0];
+  }
   const [index, setIndex] = useState(0);
   const [troca, setTroca] = useState(false);
   React.useEffect(() => {
@@ -45,7 +51,19 @@ export default function Cenas() {
     return (
       <ListItem>
         <Formik
-          initialValues={cenaSelectedRef.current as elementoPadrao}
+          enableReinitialize
+          initialValues={
+            {
+              ...cenaSelectedRef.current,
+              durationSeconds: Math.max(
+                1,
+                moment(cenaSelectedRef.current.cenaFim).diff(
+                  moment(cenaSelectedRef.current.cenaInicio),
+                  "seconds"
+                )
+              ),
+            } as elementoPadrao & { durationSeconds: number }
+          }
           onSubmit={() => console.log("submtou")}
           validateOnChange={true}
           validationSchema={Yup.object({
@@ -67,13 +85,21 @@ export default function Cenas() {
             return (
               <Form
                 onBlur={(e: any) => {
-                  dispatch({
-                    type: "alteraPropriedadeCena",
-                    tipo: e.target.name,
-                    valor: e.target.value,
-                    indiceElemento: index,
-                    formik: formik,
-                  });
+                  if (e.target.name === "durationSeconds") {
+                    dispatch({
+                      type: "changeSimpleSceneDuration",
+                      id: cenaSelectedRef.current.id,
+                      durationSeconds: Number(e.target.value),
+                    });
+                  } else {
+                    dispatch({
+                      type: "alteraPropriedadeCena",
+                      tipo: e.target.name,
+                      valor: e.target.value,
+                      indiceElemento: index,
+                      formik: formik,
+                    });
+                  }
                 }}
               >
                 <Container className="group-frame">
@@ -121,40 +147,68 @@ export default function Cenas() {
                   <Typography variant="h6" className="title">
                     Tempo
                   </Typography>
-                  <TextField
-                    fullWidth
-                    id="cenaInicio"
-                    name="cenaInicio"
-                    label="Inicio"
-                    type="datetime-local"
-                    value={formik.values.cenaInicio}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={
-                      formik.touched.cenaInicio &&
-                      Boolean(formik.errors.cenaInicio)
-                    }
-                    helperText={
-                      formik.touched.cenaInicio && formik.errors.cenaInicio
-                    }
-                  />
-                  <TextField
-                    fullWidth
-                    id="cenaFim"
-                    name="cenaFim"
-                    label="Final"
-                    type="datetime-local"
-                    value={formik.values.cenaFim}
-                    inputProps={{
-                      step: 1,
-                    }}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={
-                      formik.touched.cenaFim && Boolean(formik.errors.cenaFim)
-                    }
-                    helperText={formik.touched.cenaFim && formik.errors.cenaFim}
-                  />
+                  {mapaContext.timelineMode === "simple" ? (
+                    <TextField
+                      fullWidth
+                      id="durationSeconds"
+                      name="durationSeconds"
+                      label="Duração (segundos)"
+                      type="number"
+                      value={formik.values.durationSeconds}
+                      inputProps={{ min: 1, step: 1 }}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      error={
+                        formik.touched.durationSeconds &&
+                        (!Number.isInteger(Number(formik.values.durationSeconds)) ||
+                          Number(formik.values.durationSeconds) < 1)
+                      }
+                      helperText={
+                        formik.touched.durationSeconds &&
+                        (!Number.isInteger(Number(formik.values.durationSeconds)) ||
+                          Number(formik.values.durationSeconds) < 1)
+                          ? "Use um número inteiro de pelo menos 1 segundo."
+                          : ""
+                      }
+                    />
+                  ) : (
+                    <>
+                      <TextField
+                        fullWidth
+                        id="cenaInicio"
+                        name="cenaInicio"
+                        label="Inicio"
+                        type="datetime-local"
+                        value={formik.values.cenaInicio}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={
+                          formik.touched.cenaInicio &&
+                          Boolean(formik.errors.cenaInicio)
+                        }
+                        helperText={
+                          formik.touched.cenaInicio && formik.errors.cenaInicio
+                        }
+                      />
+                      <TextField
+                        fullWidth
+                        id="cenaFim"
+                        name="cenaFim"
+                        label="Final"
+                        type="datetime-local"
+                        value={formik.values.cenaFim}
+                        inputProps={{ step: 1 }}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={
+                          formik.touched.cenaFim && Boolean(formik.errors.cenaFim)
+                        }
+                        helperText={
+                          formik.touched.cenaFim && formik.errors.cenaFim
+                        }
+                      />
+                    </>
+                  )}
                 </Container>
                 {/* <FormControlLabel
               control={
@@ -225,7 +279,12 @@ export default function Cenas() {
             cenaSelectedRef.current?.id ?? mapaContext?.conteudo.cenas[0].id
           }
           onChange={(e, c: any) => {
-            dispatch({
+            cenaSelectedRef.current = mapaContext.conteudo.cenas.find(
+              (cena) => cena.id === c.props.value
+            );
+            if (mapaContext.timelineMode === "simple") {
+              dispatch({ type: "selectSimpleScene", id: c.props.value });
+            } else dispatch({
               type: "selecionarCena",
               id: c.props.value,
               tipo: "cenas",

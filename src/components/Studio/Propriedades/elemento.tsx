@@ -4,34 +4,34 @@ import ImageUploadField from '@/components/Atomic/ImageUploadField';
 import useCaixaDialogo from '@/components/CaixaDialogo/useCaixaDialogo';
 import ImageResolver from '@/components/ImageUrlResolver';
 import {
-  default as contextChangers,
-  default as MapaContextChanger,
+    default as contextChangers,
+    default as MapaContextChanger,
 } from '@/components/Mapa/ContextChangers';
 import { useMapaContext, useMapaDispatch } from '@/components/Mapa/MapaContext';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import {
-  Collapse,
-  Container,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  FormControl,
-  FormControlLabel,
-  ImageList,
-  ImageListItem,
-  InputLabel,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  MenuItem,
-  Select,
-  Slider,
-  styled,
-  Switch,
-  TextField,
-  Typography,
+    Collapse,
+    Container,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Divider,
+    FormControl,
+    FormControlLabel,
+    ImageList,
+    ImageListItem,
+    InputLabel,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemText,
+    MenuItem,
+    Select,
+    Slider,
+    styled,
+    Switch,
+    TextField,
+    Typography,
 } from '@mui/material';
 import { Form, Formik } from 'formik';
 import Leaflet, { Map } from 'leaflet';
@@ -356,6 +356,8 @@ export default function Elemento(props: { map: Map }) {
                               </Select>
                             </FormControl>
 
+                            {mapaContext.timelineMode !== 'simple' && (
+                              <>
                             <TextField
                               fullWidth
                               id="cenaInicio"
@@ -394,6 +396,8 @@ export default function Elemento(props: { map: Map }) {
                                 formik.touched.cenaFim && formik.errors.cenaFim
                               }
                             />
+                              </>
+                            )}
                           </Container>
                           {(formik.values as any).radius && (
                             <TextField

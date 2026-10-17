@@ -1,5 +1,5 @@
-import { actionContextChange, mapaContextSchema } from "./mapaContextTypes";
 import MapaContextChanger from "./ContextChangers";
+import { actionContextChange, mapaContextSchema } from "./mapaContextTypes";
 
 export function mapaReducer(
   oldMapaContext: mapaContextSchema,
@@ -119,6 +119,18 @@ export function mapaReducer(
     }
     case "alteraPropriedadeGeral": {
       return MapaContextChanger.changePropriedadeMapa(oldMapaContext, action);
+    }
+    case "changeTimelineMode": {
+      return MapaContextChanger.changeTimelineMode(oldMapaContext, action);
+    }
+    case "selectSimpleScene": {
+      return MapaContextChanger.selectSimpleScene(oldMapaContext, action);
+    }
+    case "reorderSimpleScenes": {
+      return MapaContextChanger.reorderSimpleScenes(oldMapaContext, action);
+    }
+    case "changeSimpleSceneDuration": {
+      return MapaContextChanger.changeSimpleSceneDuration(oldMapaContext, action);
     }
     case "inserindoNovaCena": {
       return MapaContextChanger.adicionarNovaCena(oldMapaContext);

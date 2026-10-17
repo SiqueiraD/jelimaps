@@ -1,15 +1,15 @@
-import React, { useEffect, useState, useRef } from "react";
-import { Grid2, Chip, Tab, AppBar, Tabs, Box } from "@mui/material";
+import DraggerResize from "@/components/DraggerResize";
 import { useMapaContext, useMapaDispatch } from "@/components/Mapa/MapaContext";
-import { Rnd } from "react-rnd";
+import ReprodutorLinhaTempo from "@/components/Mapa/ReprodutorLinhaTempo";
 import AlignVerticalCenterIcon from "@mui/icons-material/AlignVerticalCenter";
+import { AppBar, Box, Chip, Grid2, Tab, Tabs } from "@mui/material";
+import { Map } from "leaflet";
+import React, { useEffect, useRef, useState } from "react";
+import { Rnd } from "react-rnd";
 import useWindowDimensions from "../useWindowDimensions";
 import Cenas from "./cenas";
-import Geral from "./geral";
 import Elemento from "./elemento";
-import { Map } from "leaflet";
-import DraggerResize from "@/components/DraggerResize";
-import ReprodutorLinhaTempo from "@/components/Mapa/ReprodutorLinhaTempo";
+import Geral from "./geral";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -35,11 +35,14 @@ export default function Propriedades(props: {
   const mapaContext = useMapaContext();
   const dispatch = useMapaDispatch();
   const [rndRef, setRndRef] = useState<Rnd>();
-  const [value, setValue] = React.useState(0);
+  const [value, setValue] = React.useState(
+    mapaContext.timelineMode === "simple" ? 1 : 0
+  );
   const tocadorRef = useRef(null);
   const headerTabRef = useRef(null);
   const timeOutIdRef = useRef(null);
   const tempoAtual = React.useRef(mapaContext.tempo);
+  const activeSceneIdRef = useRef(mapaContext.activeSceneId);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -102,9 +105,25 @@ export default function Propriedades(props: {
       mapaContext.elementoFoco ||
       (mapaContext.elementosFoco && mapaContext.elementosFoco.length)
         ? 2
+        : mapaContext.timelineMode === "simple"
+        ? 1
         : 0;
     setValue(val);
-  }, [mapaContext.elementoFoco, mapaContext.elementosFoco]);
+  }, [
+    mapaContext.elementoFoco,
+    mapaContext.elementosFoco,
+    mapaContext.timelineMode,
+  ]);
+
+  useEffect(() => {
+    if (
+      mapaContext.timelineMode === "simple" &&
+      activeSceneIdRef.current !== mapaContext.activeSceneId
+    ) {
+      activeSceneIdRef.current = mapaContext.activeSceneId;
+      setValue(1);
+    }
+  }, [mapaContext.activeSceneId, mapaContext.timelineMode]);
 
   React.useEffect(() => {
     const elemento = document.getElementById("seletorResize");

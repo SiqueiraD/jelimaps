@@ -1,29 +1,29 @@
 import useBarraAlerta from '@/components/BarraAlerta/useBarraAlerta';
 import useCaixaDialogo from '@/components/CaixaDialogo/useCaixaDialogo';
 import {
-  useMapaContext,
-  useMapaDispatch,
-  useMapaUndo,
+    useMapaContext,
+    useMapaDispatch,
+    useMapaUndo,
 } from '@/components/Mapa/MapaContext';
 import { MODO_VISAO } from '@/components/Mapa/mapaContextTypes';
 import tiposPlanoFundo from '@/components/Mapa/PlanoFundoMapaComum/tiposPlanoFundo';
 import { useMapaStore } from '@/stores/mapaStore';
 import {
-  Alert,
-  Button,
-  ButtonGroup,
-  Container,
-  FormControl,
-  FormControlLabel,
-  FormLabel,
-  InputLabel,
-  MenuItem,
-  Radio,
-  RadioGroup,
-  Select,
-  Switch,
-  TextField,
-  Typography,
+    Alert,
+    Button,
+    ButtonGroup,
+    Container,
+    FormControl,
+    FormControlLabel,
+    FormLabel,
+    InputLabel,
+    MenuItem,
+    Radio,
+    RadioGroup,
+    Select,
+    Switch,
+    TextField,
+    Typography,
 } from '@mui/material';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { Form, Formik } from 'formik';
@@ -435,23 +435,58 @@ export default function Geral() {
                 <Typography variant="h6" className="title">
                   Linha do Tempo
                 </Typography>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={!formik.values.simpleTimeline}
-                      onChange={(e, checked) => {
-                        dispatch({
-                          type: 'alteraPropriedadeGeral',
-                          nomePropriedade: 'simpleTimeline',
-                          valorPropriedade: !checked,
-                          formik: formik,
+                <FormControl fullWidth>
+                  <InputLabel id="timeline-mode-label">Modo</InputLabel>
+                  <Select
+                    labelId="timeline-mode-label"
+                    label="Modo"
+                    value={mapaContext.timelineMode ?? 'advanced'}
+                    onChange={(event) => {
+                      const timelineMode = event.target.value as
+                        | 'advanced'
+                        | 'simple';
+                      if (timelineMode === 'simple') {
+                        openModalConfirm({
+                          title: 'Usar linha do tempo simplificada',
+                          message:
+                            'Elementos que atravessam cenas serão duplicados em cópias independentes e suas alterações serão consolidadas. Você poderá desfazer esta conversão enquanto estiver nesta sessão.',
+                          confirmarTitle: 'Converter',
+                          onConfirm: () =>
+                            dispatch({
+                              type: 'changeTimelineMode',
+                              timelineMode,
+                            }),
                         });
-                      }}
-                      name={'simpleTimeline'}
-                    />
-                  }
-                  label={'Separar por elementos'}
-                />
+                      } else {
+                        dispatch({ type: 'changeTimelineMode', timelineMode });
+                      }
+                    }}
+                  >
+                    <MenuItem value="simple">Simplificada</MenuItem>
+                    <MenuItem value="advanced">
+                      Avançada (vis-timeline)
+                    </MenuItem>
+                  </Select>
+                </FormControl>
+                {(mapaContext.timelineMode ?? 'advanced') === 'advanced' && (
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={!formik.values.simpleTimeline}
+                        onChange={(e, checked) => {
+                          dispatch({
+                            type: 'alteraPropriedadeGeral',
+                            nomePropriedade: 'simpleTimeline',
+                            valorPropriedade: !checked,
+                            formik: formik,
+                          });
+                        }}
+                        name={'simpleTimeline'}
+                      />
+                    }
+                    label={'Separar por elementos'}
+                  />
+                )}
               </Container>
 
               <Container className="group-frame">

@@ -1,27 +1,39 @@
 import { elementos } from "@/main/constants/elementos";
-import {
-  actionContextChange,
-  elementoPadrao,
-  mapaContextSchema,
-  alteracaoElemento,
-  tipoElemento,
-  arrayRectangleType,
-} from "../mapaContextTypes";
-import { v4, NIL } from "uuid";
 import moment from "moment";
+import { NIL, v4 } from "uuid";
+import {
+    actionContextChange,
+    alteracaoElemento,
+    arrayRectangleType,
+    elementoPadrao,
+    mapaContextSchema,
+    tipoElemento,
+} from "../mapaContextTypes";
 import auxiliadorRetornoContext from "./auxiliadorRetornoContext";
 
 const padraoElementoNovoAdicionado = (oldMapaContext: mapaContextSchema) => {
+  const activeScene = oldMapaContext.conteudo.cenas.find(
+    (cena) => cena.id === oldMapaContext.activeSceneId
+  ) ?? oldMapaContext.conteudo.cenas[0];
   return {
-    cenaInicio: moment(oldMapaContext.conteudo.cenas[0].cenaInicio)
-      .add(1, "seconds")
-      .format("yyyy-MM-DDTHH:mm:ss"),
-    cenaFim: moment(
-      oldMapaContext.conteudo.cenas[oldMapaContext.conteudo.cenas.length - 1]
-        .cenaFim
-    )
-      .add(-1, "seconds")
-      .format("yyyy-MM-DDTHH:mm:ss"),
+    cenaInicio:
+      oldMapaContext.timelineMode === "simple"
+        ? activeScene.cenaInicio
+        : moment(oldMapaContext.conteudo.cenas[0].cenaInicio)
+            .add(1, "seconds")
+            .format("yyyy-MM-DDTHH:mm:ss"),
+    cenaFim:
+      oldMapaContext.timelineMode === "simple"
+        ? activeScene.cenaFim
+        : moment(
+            oldMapaContext.conteudo.cenas[
+              oldMapaContext.conteudo.cenas.length - 1
+            ].cenaFim
+          )
+            .add(-1, "seconds")
+            .format("yyyy-MM-DDTHH:mm:ss"),
+    cenaSelecionada:
+      oldMapaContext.timelineMode === "simple" ? activeScene.id : undefined,
     order:
       auxiliadorRetornoContext
         .retornaListaElementosConteudo(oldMapaContext)
@@ -342,6 +354,13 @@ const addElementoCopiado = (
     id: v4(),
     type: "Feature",
     order: propsPadrao.order,
+    cenaInicio: propsPadrao.cenaInicio,
+    cenaFim: propsPadrao.cenaFim,
+    cenaSelecionada: propsPadrao.cenaSelecionada,
+    alteracoes:
+      oldMapaContext.timelineMode === "simple"
+        ? undefined
+        : actionContext.elemento.alteracoes,
   };
   //oldMapaContext.conteudo[actionContext.elemento.dataRef]
   const newArrayConteudoTipo = [

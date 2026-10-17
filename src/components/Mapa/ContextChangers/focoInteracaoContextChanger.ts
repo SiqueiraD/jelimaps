@@ -1,11 +1,12 @@
 import { elementoProto, elementos } from "@/main/constants/elementos";
+import moment from "moment";
 import {
-  actionContextChange,
-  mapaContextSchema,
-  tipoElemento,
+    actionContextChange,
+    mapaContextSchema,
+    tipoElemento,
 } from "./../mapaContextTypes";
 import auxiliadorRetornoContext from "./auxiliadorRetornoContext";
-import moment from "moment";
+import { sceneInteriorTime } from "./simpleTimelineContextChanger";
 
 const changeElementoInteracao = (
   oldMapaContext: mapaContextSchema,
@@ -33,15 +34,31 @@ const changeElementoFoco = (
           .retornaListaElementosConteudo(oldMapaContext)
           .find((x) => x.id === actionContextChange.id)
       : null);
+  const selectedScene =
+    oldMapaContext.timelineMode === "simple" && newElemntoFoco?.cenaSelecionada
+      ? oldMapaContext.conteudo.cenas.find(
+          (cena) => cena.id === newElemntoFoco.cenaSelecionada
+        )
+      : null;
   return {
     ...oldMapaContext,
     elementosFoco: null,
     elementoFoco: newElemntoFoco,
     elementoInteracao: elementos.Hand,
-    bounds: actionContextChange.mapContext?.bounds ?? oldMapaContext.bounds,
-    center: actionContextChange.mapContext?.center ?? oldMapaContext.center,
-    zoom: actionContextChange.mapContext?.zoom ?? oldMapaContext.zoom,
-    tempo: actionContextChange.time ?? oldMapaContext.tempo,
+    bounds:
+      selectedScene?.bounds ??
+      actionContextChange.mapContext?.bounds ??
+      oldMapaContext.bounds,
+    center:
+      selectedScene?.center ??
+      actionContextChange.mapContext?.center ??
+      oldMapaContext.center,
+    zoom:
+      selectedScene?.zoom ?? actionContextChange.mapContext?.zoom ?? oldMapaContext.zoom,
+    activeSceneId: selectedScene?.id ?? oldMapaContext.activeSceneId,
+    tempo: selectedScene
+      ? sceneInteriorTime(selectedScene)
+      : actionContextChange.time ?? oldMapaContext.tempo,
   };
 };
 
@@ -153,7 +170,7 @@ const changeTempoAtual = (
   const cenaNova = oldMapaContext.conteudo.cenas.find(
     (x) =>
       moment(x.cenaInicio) <= moment(novoTempo) &&
-      moment(x.cenaFim) >= moment(novoTempo) &&
+      moment(x.cenaFim) > moment(novoTempo) &&
       (moment(x.cenaInicio) > moment(oldMapaContext.tempo) ||
         moment(x.cenaFim) < moment(oldMapaContext.tempo))
   );

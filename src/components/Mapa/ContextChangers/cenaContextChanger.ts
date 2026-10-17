@@ -1,13 +1,13 @@
-import {
-  elementoPadrao,
-  mapaContextSchema,
-  actionContextChange,
-} from "./../mapaContextTypes";
-import { v4 } from "uuid";
 import moment from "moment";
-import auxiliadorRetornoContext from "./auxiliadorRetornoContext";
+import { v4 } from "uuid";
 import { DateType } from "vis-timeline";
 import contextChangers from ".";
+import {
+    actionContextChange,
+    elementoPadrao,
+    mapaContextSchema,
+} from "./../mapaContextTypes";
+import auxiliadorRetornoContext from "./auxiliadorRetornoContext";
 
 function getRandomColor(oldMapaContext: mapaContextSchema) {
   var letters = "0123456789ABCDEF";
@@ -110,10 +110,15 @@ const adicionarNovaCena = (
   oldMapaContext: mapaContextSchema
 ): mapaContextSchema => {
   const novaCenaObj = novaCena(oldMapaContext);
-  oldMapaContext.conteudo.cenas.push(novaCenaObj);
+  if (oldMapaContext.timelineMode === "simple")
+    return contextChangers.addSimpleScene(oldMapaContext, novaCenaObj);
   return {
     ...oldMapaContext,
     cenaFim: novaCenaObj.cenaFim,
+    conteudo: {
+      ...oldMapaContext.conteudo,
+      cenas: [...oldMapaContext.conteudo.cenas, novaCenaObj],
+    },
   };
 };
 
@@ -121,6 +126,8 @@ const deletarCena = (
   oldMapaContext: mapaContextSchema,
   actionContextChange: actionContextChange
 ): mapaContextSchema => {
+  if (oldMapaContext.timelineMode === "simple")
+    return contextChangers.deleteSimpleScene(oldMapaContext, actionContextChange);
   const novasCenas = oldMapaContext.conteudo.cenas.filter(
     (x) => x.id !== actionContextChange.id
   );

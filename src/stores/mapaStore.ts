@@ -1,7 +1,7 @@
 import auxiliadorRetornoContext from '@/components/Mapa/ContextChangers/auxiliadorRetornoContext';
 import {
-  actionContextChange,
-  mapaContextSchema,
+    actionContextChange,
+    mapaContextSchema,
 } from '@/components/Mapa/mapaContextTypes';
 import { mapaReducer } from '@/components/Mapa/MapaEventDispatcher';
 import { elementos } from '@/main/constants/elementos';
@@ -25,15 +25,21 @@ function cleanupRemovedElementImages(
 ) {
   const before =
     auxiliadorRetornoContext.retornaListaElementosConteudo(oldContext);
-  const afterIds = new Set(
-    auxiliadorRetornoContext
-      .retornaListaElementosConteudo(newContext)
-      .map((e) => e.id)
+  const after =
+    auxiliadorRetornoContext.retornaListaElementosConteudo(newContext);
+  const afterIds = new Set(after.map((e) => e.id));
+  const afterUrls = new Set(
+    after.map((e) => (e as any).imagemURL || (e as any).urlImagem).filter(Boolean)
   );
   before.forEach((el) => {
     if (afterIds.has(el.id)) return;
     const url = (el as any).imagemURL || (el as any).urlImagem;
-    if (url && typeof url === 'string' && isR2Key(url)) {
+    if (
+      url &&
+      typeof url === 'string' &&
+      isR2Key(url) &&
+      !afterUrls.has(url)
+    ) {
       fetch('/api/imagens/by-url', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
@@ -100,7 +106,10 @@ interface MapaStore extends Required<MapaStoreSettable> {
 }
 
 const createInitialContext = (): mapaContextSchema => {
+  const firstSceneId = v4();
   return {
+    timelineMode: 'simple',
+    activeSceneId: firstSceneId,
     simpleTimeline: true,
     elementoInteracao: elementos.Hand,
     slidePropriedade: false,
@@ -117,7 +126,7 @@ const createInitialContext = (): mapaContextSchema => {
         {
           cenaInicio: moment().format('yyyy-MM-DDTHH:mm:ss'),
           cenaFim: moment().add(1, 'minute').format('yyyy-MM-DDTHH:mm:ss'),
-          id: v4(),
+          id: firstSceneId,
           nome: 'cena #1',
           dataRef: 'cenas',
           visTimelineObject: {
@@ -154,6 +163,26 @@ const createInitialContext = (): mapaContextSchema => {
   } as mapaContextSchema;
 };
 
+const normalizeLoadedContext = (context: mapaContextSchema): mapaContextSchema => {
+  const initial = createInitialContext();
+  const cenas = context.conteudo?.cenas ?? initial.conteudo.cenas;
+  const timelineMode = context.timelineMode ?? 'advanced';
+  const activeSceneId = cenas.some((cena) => cena.id === context.activeSceneId)
+    ? context.activeSceneId
+    : cenas[0]?.id;
+
+  return {
+    ...context,
+    timelineMode,
+    activeSceneId,
+    conteudo: { ...context.conteudo, cenas },
+    timelineOptions: {
+      ...initial.timelineOptions,
+      ...context.timelineOptions,
+    },
+  };
+};
+
 export const useMapaStore = create<MapaStore>()(
   devtools(
     persist(
@@ -184,13 +213,7 @@ export const useMapaStore = create<MapaStore>()(
 
             if (action.type === 'reset') {
               newContext = action.mapContext
-                ? {
-                    ...action.mapContext,
-                    timelineOptions: {
-                      ...createInitialContext().timelineOptions,
-                      ...action.mapContext.timelineOptions,
-                    },
-                  }
+                ? normalizeLoadedContext(action.mapContext)
                 : createInitialContext();
             } else if (action.type === 'use-undo') {
               // Usado internamente para undo/redo
@@ -200,7 +223,10 @@ export const useMapaStore = create<MapaStore>()(
               });
             } else {
               newContext = mapaReducer(oldContext, action);
-              if (action.type === 'removeElements') {
+              if (
+                action.type === 'removeElements' ||
+                action.type === 'deletarCena'
+              ) {
                 cleanupRemovedElementImages(oldContext, newContext);
               }
             }
@@ -239,7 +265,9 @@ export const useMapaStore = create<MapaStore>()(
         },
 
         reset: (newContext?: mapaContextSchema) => {
-          const initialContext = newContext ?? createInitialContext();
+          const initialContext = newContext
+            ? normalizeLoadedContext(newContext)
+            : createInitialContext();
           set({
             context: initialContext,
             mapaId: null,
@@ -343,9 +371,16 @@ export const useMapaStore = create<MapaStore>()(
             tituloMapa: state.tituloMapa,
           } as MapaStore;
         },
+        migrate: (persistedState: MapaStore) => {
+          if (persistedState?.context) {
+            persistedState.context = normalizeLoadedContext(persistedState.context);
+          }
+          return persistedState;
+        },
         onRehydrateStorage: () => (state) => {
           // Ao restaurar do storage, inicializar undoState corretamente
           if (state) {
+            state.context = normalizeLoadedContext(state.context);
             state.undoState = {
               past: [],
               present: state.context,
@@ -353,7 +388,7 @@ export const useMapaStore = create<MapaStore>()(
             };
           }
         },
-        version: 1, // Versão do schema para migrações futuras
+        version: 2, // Versão do schema para migrações futuras
       }
     ),
     {

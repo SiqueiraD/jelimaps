@@ -1,11 +1,14 @@
-import React from "react";
+import { useMapaContext } from "@/components/Mapa/MapaContext";
 import { Grid2 } from "@mui/material";
+import React from "react";
+import SimpleTimeline from "./SimpleTimeline";
 import VisTimeline from "./VisTimeline";
 
 export default function LinhaTempo(props: {
   tempoAtualRef: React.MutableRefObject<any>;
   altura: number;
 }) {
+  const mapaContext = useMapaContext();
   return (
     <Grid2
       id={"oi"}
@@ -32,7 +35,11 @@ export default function LinhaTempo(props: {
         },
       }}
     >
-      <VisTimeline tempoAtualRef={props.tempoAtualRef} altura={props.altura} />
+      {mapaContext.timelineMode === "simple" ? (
+        <SimpleTimeline />
+      ) : (
+        <VisTimeline tempoAtualRef={props.tempoAtualRef} altura={props.altura} />
+      )}
     </Grid2>
   );
 }

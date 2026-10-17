@@ -1,3 +1,4 @@
+import { sceneInteriorTime } from '@/components/Mapa/ContextChangers/simpleTimelineContextChanger';
 import Leaflet, { LatLngBoundsExpression } from 'leaflet';
 
 /**
@@ -14,9 +15,11 @@ export const montarMapContextParaElemento = (elemento: any, mapaContextAtual: an
   let cenaBounds = null;
   let cenaZoom = null;
   
-  if (elemento.cenaInicio && mapaContextAtual?.cenas) {
-    const cena = mapaContextAtual.cenas.find((c: any) => 
-      elemento.cenaInicio >= c.cenaInicio && elemento.cenaInicio <= c.cenaFim
+  if (elemento.cenaInicio && mapaContextAtual?.conteudo?.cenas) {
+    const cena = mapaContextAtual.conteudo.cenas.find(
+      (c: any) =>
+        c.id === elemento.cenaSelecionada ||
+        (elemento.cenaInicio >= c.cenaInicio && elemento.cenaInicio < c.cenaFim)
     );
     if (cena) {
       cenaBounds = cena.bounds;
@@ -101,7 +104,13 @@ export const montarDispatchSelecionarElemento = (elemento: any, mapaContextAtual
 
   // Adiciona o tempo se o elemento tem cenaInicio
   if (elemento?.cenaInicio) {
-    dispatch.time = elemento.cenaInicio;
+    const cenaSelecionada = mapaContextAtual?.conteudo?.cenas?.find(
+      (cena: any) => cena.id === elemento.cenaSelecionada
+    );
+    dispatch.time =
+      mapaContextAtual.timelineMode === 'simple' && cenaSelecionada
+        ? sceneInteriorTime(cenaSelecionada)
+        : elemento.cenaInicio;
   }
 
   // Adiciona o mapContext montado
